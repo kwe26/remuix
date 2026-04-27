@@ -30,5 +30,3 @@ flutter run
 
 - `docs/remui.html` - Architecture + DSL guide
 - `docs/widgets.html` - Widget schema reference (including Sidebar + NavigationRail)
-
-This project was created using `bun init` in bun v1.3.13. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
