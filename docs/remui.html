@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RemUI Documentation</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --ink: #0f172a;
+      --muted: #475569;
+      --accent: #0f766e;
+      --accent-2: #0d47a1;
+      --line: #e2e8f0;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(180deg, #eef3f8 0%, #f8fafc 100%);
+      color: var(--ink);
+      line-height: 1.55;
+      overflow-x: hidden;
+    }
+
+    header {
+      background: radial-gradient(circle at 20% 20%, #0d47a1 0%, #0f766e 55%, #0f172a 100%);
+      color: #fff;
+      padding: 32px 24px;
+    }
+
+    .brand {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .brand img {
+      width: 96px;
+      height: 96px;
+      border-radius: 20px;
+      object-fit: cover;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      box-shadow: 0 16px 30px rgba(0, 0, 0, 0.2);
+      background: rgba(255, 255, 255, 0.15);
+      flex: 0 0 auto;
+    }
+
+    .brand h1 { margin: 0 0 8px; font-size: 2rem; }
+    .brand p { margin: 0; opacity: 0.95; }
+
+    .layout {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
+      gap: 20px;
+      padding: 20px;
+    }
+
+    main {
+      min-width: 0;
+    }
+
+    nav {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      position: sticky;
+      top: 16px;
+      height: fit-content;
+    }
+
+    nav a {
+      display: block;
+      text-decoration: none;
+      color: var(--accent-2);
+      margin: 6px 0;
+      font-size: 0.95rem;
+    }
+
+    .group-label {
+      display: inline-block;
+      margin-top: 10px;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+
+    main section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    h2 { margin-top: 0; color: var(--accent); }
+    h3 { margin-bottom: 6px; }
+
+    code, pre {
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    pre {
+      margin: 8px 0 0;
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 10px;
+      padding: 12px;
+      overflow-x: hidden;
+      border: 1px solid #1e293b;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    code {
+      word-break: break-word;
+    }
+
+    table {
+      width: 100%;
+      table-layout: fixed;
+    }
+
+    th, td {
+      word-break: break-word;
+    }
+
+    .note {
+      border-left: 4px solid var(--accent);
+      padding: 8px 10px;
+      background: #ecfeff;
+      color: #164e63;
+      border-radius: 4px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px;
+      background: #f8fafc;
+    }
+
+    .card strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .chip {
+      display: inline-block;
+      margin: 4px 6px 0 0;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #e0f2fe;
+      color: #075985;
+      font-size: 0.8rem;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      nav {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <img src="logo.jpg" alt="RemUI logo" />
+      <div>
+        <h1>RemUI Documentation</h1>
+        <p>Rem - Re:Zero Character. Server DSL + Flutter runtime for JSON-driven UI, callbacks, variables, and conditional rendering.</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav>
+      <strong>Sections</strong>
+      <a href="#overview">Overview</a>
+      <a href="#dsl">UI DSL</a>
+      <a href="#initialization">Initialization</a>
+      <a href="#widget-reference">Widget Reference</a>
+      <a href="#variables">Variables</a>
+      <a href="#conditions">Conditions</a>
+      <a href="#else-if">Else If Chains</a>
+      <a href="#callbacks">Callbacks</a>
+      <a href="#submit">Submit Flow</a>
+      <a href="#metadata-ssr">Metadata and SSR</a>
+      <a href="#navigation-layouts">Navigation Layouts</a>
+      <a href="#controls">Controls</a>
+      <a href="#prefs">Preference Conditions</a>
+      <a href="#exceptional">Exceptional Widgets</a>
+      <a href="#files">File Layout</a>
+    </nav>
+
+    <main>
+      <section id="overview">
+        <h2>Overview</h2>
+        <p>RemUI builds widget trees on the backend and renders them on Flutter through a widget registry. Backend actions and callbacks are transported as JSON.</p>
+        <div class="note">Core backend entrypoints are in <code>remui.ts</code> and route usage is in <code>index.ts</code>.</div>
+        <div class="chip">JSON-first</div>
+        <div class="chip">Backend DSL</div>
+        <div class="chip">Flutter runtime</div>
+        <div class="note">Foreach templates now use <code>$name$</code>-style placeholders, so they do not conflict with the server-side <code>{vars}</code> resolver.</div>
+      </section>
+
+      <section id="dsl">
+        <h2>UI DSL</h2>
+        <h3>Create widgets</h3>
+<pre><code>const card = ui('Card', {
+  child: ui('Padding', { padding: 12 },
+    ui('Text', { text: 'Hello' })
+  )
+});</code></pre>
+        <h3>Navigation helper</h3>
+<pre><code>ui('IconButton', {
+  icon: ui('Icon', { icon: 'search' }),
+  onPressed: nav('/ui/search')
+});</code></pre>
+        <p>You can also open a route as a dialog overlay. When the second argument is <code>'dialog'</code>, the current page stays visible behind it.</p>
+<pre><code>ui('IconButton', {
+  icon: ui('Icon', { icon: 'open_in_new' }),
+  onPressed: nav('/ui/dialogTest', 'dialog')
+});</code></pre>
+        <h3>Chainable condition</h3>
+<pre><code>equate('index', '0', {
+  child: ui('Text', { text: 'Zero' })
+}).equate('index', '1', {
+  child: ui('Text', { text: 'One' })
+});</code></pre>
+      </section>
+
+      <section id="initialization">
+        <h2>Initialization</h2>
+        <p>Use <code>RemUI.init</code> to set the backend URL, runtime config, custom widget registers, custom pages, and page action handlers.</p>
+<pre><code>RemUI.init(
+  "http://localhost:3000",
+  {"mediaQuery": true},
+  registers: {
+    "TextO": (j) => Text(j["text"]?.toString() ?? '')
+  },
+  pages: {
+    ".page_cd_a": (j) => PageCDA(j)
+  },
+  pageFunction: {
+    ".main": (onClick, url) {
+      if (url == "/next") {
+        RemUI.changePage("/ui/next");
+      }
+    }
+  }
+);</code></pre>
+        <div class="note">Custom registers override built-in widget types when the names match. Custom pages can be local Flutter pages and do not need to come from the RemUI server.</div>
+      </section>
+
+      <section id="widget-reference">
+        <h2>Widget Reference</h2>
+        <div class="grid">
+          <div class="card">
+            <strong>Text</strong>
+            Renders plain text, but also supports template placeholders like <code>{prefs.token}</code>.
+          </div>
+          <div class="card">
+            <strong>TextField</strong>
+            Binds to <code>variable</code> and keeps runtime state in sync as you type.
+          </div>
+          <div class="card">
+            <strong>FilledButton / ElevatedButton / OutlinedButton</strong>
+            Standard button widgets. Use <code>action</code> with <code>submit</code>, <code>nav:</code>, or <code>setVar</code> payloads.
+          </div>
+          <div class="card">
+            <strong>Dialog</strong>
+            Renders an AlertDialog-style modal. Use <code>body</code>, <code>title</code>, and <code>actions</code> for dialog pages.
+          </div>
+          <div class="card">
+            <strong>Card / Padding / Center / Column / Row / SizedBox</strong>
+            Layout widgets with automatic child wrapping and special handling for multi-child containers.
+          </div>
+          <div class="card">
+            <strong>Icon / IconButton</strong>
+            Icon names are resolved on the backend; icon buttons dispatch through the shared click handler.
+          </div>
+          <div class="card">
+            <strong>condition</strong>
+            Produced by <code>equate()</code>, rendered client-side as an if / else-if chain.
+          </div>
+          <div class="card">
+            <strong>Sidebar / SidebarWithUI</strong>
+            Desktop/tablet shell with customizable header, active styling, badges, footer, and variable-driven selection.
+          </div>
+          <div class="card">
+            <strong>NavigationRail</strong>
+            Material rail navigation support with destinations, indicators, label modes, and runtime var integration.
+          </div>
+          <div class="card">
+            <strong>BottomNavigationBar</strong>
+            Reactive mobile-first nav bound to runtime vars and action payloads.
+          </div>
+          <div class="card">
+            <strong>Tabs / Radio</strong>
+            New modular widget entries for tabbed content and single-choice selection inputs.
+          </div>
+        </div>
+      </section>
+
+      <section id="variables">
+        <h2>Variables</h2>
+        <h3>Set backend runtime variable</h3>
+<pre><code>setVar('index', '0');</code></pre>
+        <h3>Set variable from callback response</h3>
+<pre><code>const callback = ui.getCallback(req, res, '#cb1001');
+callback
+  .setVar('index', '1')
+  .send();</code></pre>
+      </section>
+
+      <section id="conditions">
+        <h2>Conditions</h2>
+        <h3>Generic condition</h3>
+<pre><code>equate('index', '0', {
+  child: ui('Text', { text: 'Visible when index == 0' })
+});</code></pre>
+        <h3>Produced JSON shape</h3>
+<pre><code>{
+  "type": "condition",
+  "var": "index",
+  "eq": "0",
+  "child": { "type": "Text", "text": "..." }
+}</code></pre>
+      </section>
+
+      <section id="else-if">
+        <h2>Else If Chains</h2>
+        <p>Use <code>equate(...).equate(...)</code> to build a chain that behaves like <code>if / else if / else if</code>. The first match is rendered and the rest are skipped.</p>
+<pre><code>equate('index', '0', {
+  child: ui('Text', { text: 'Zero' })
+}).equate('index', '1', {
+  child: ui('Text', { text: 'One' })
+}).equate('index', '2', {
+  child: ui('Text', { text: 'Two' })
+});</code></pre>
+      </section>
+
+      <section id="callbacks">
+        <h2>Callbacks</h2>
+        <p>Callbacks are id-based and handled via <code>ui.getCallback(req, res, id)</code>.</p>
+<pre><code>app.post('/ui/callbacks', (req, res) => {
+  const callback = ui.getCallback(req, res, '#cb1001');
+  const data = callback.data();
+
+  callback
+    .add(SnackBar('Submitted'))
+    .setSharedPref('token=hello')
+    .remSharedPref('token')
+    .setVar('index', '1')
+    .send();
+});</code></pre>
+        <h3>sendBack timeout payload builder</h3>
+<pre><code>const delayed = remui
+  .sendBack()
+  .timeout(1000)
+  .setVar('searchDelayed', 'ready')
+  .setSharedPref('searchDelayed=ready')
+  .remSharedPref('dialogEmail');</code></pre>
+        <p>Use this payload directly in the <code>Timeout</code> widget:</p>
+<pre><code>ui('Timeout', {
+  data: delayed
+});</code></pre>
+      </section>
+
+      <section id="metadata-ssr">
+        <h2>Metadata and SSR</h2>
+        <p>Every widget node exposes chainable metadata helpers. Use <code>.meta()</code> to define page metadata, and <code>.tag()</code> / <code>.alt()</code> to provide SSR-friendly HTML hints.</p>
+<pre><code>const screen = ui('Scaffold', {
+  body: ui('Text', { text: 'Hello' })
+})
+  .meta('title', 'Hello Page')
+  .meta('description', 'Rendered on the server too');</code></pre>
+        <p>Server-side rendering is enabled with <code>app.use(remui.ssr())</code>. The middleware inspects the request and returns HTML for browser GET requests while Flutter keeps receiving JSON.</p>
+        <p>Flutter requests send a dedicated user-agent, <code>RemUI-Flutter/1.0</code>, so the middleware can distinguish app traffic from browser traffic.</p>
+        <p>Use <code>$token$</code> inside Foreach templates and <code>{token}</code> for normal server/runtime interpolation. That keeps repeated row data separate from global variable substitution.</p>
+      </section>
+
+      <section id="submit">
+        <h2>Submit Flow</h2>
+        <h3>Button action payload</h3>
+<pre><code>ui('FilledButton', {
+  action: {
+    action: 'submit',
+    id: '#cb1001',
+    variables: ['name', 'password']
+  },
+  child: ui('Text', { text: 'Submit' })
+});</code></pre>
+        <p>Flutter sends <code>id</code> and selected variables to <code>/ui/callbacks</code>.</p>
+      </section>
+
+      <section id="navigation-layouts">
+        <h2>Navigation Layouts</h2>
+        <h3>Styled Sidebar + page content</h3>
+<pre><code>const sidebar = ui('Sidebar', {
+  variable: 'index',
+  title: 'Navigation',
+  subtitle: 'RemUI demo',
+  accentColor: '#2454FF',
+  items: [
+    {
+      icon: ui('Icon', { icon: 'home' }),
+      label: 'Form',
+      subtitle: 'Main screen',
+      action: { type: 'setVar', var: 'index', value: '0' }
+    },
+    {
+      icon: ui('Icon', { icon: 'person' }),
+      label: 'Profile',
+      action: { type: 'setVar', var: 'index', value: '1' }
+    }
+  ]
+});
+
+const body = ui('SidebarWithUI', {
+  sidebar,
+  showDivider: true,
+  contentPadding: 16,
+  child: ui('Center', { child: ui('Text', { text: 'Page body' }) })
+});</code></pre>
+
+        <h3>Material NavigationRail</h3>
+<pre><code>const rail = ui('NavigationRail', {
+  variable: 'index',
+  labelType: 'all',
+  useIndicator: true,
+  destinations: [
+    {
+      icon: ui('Icon', { icon: 'home' }),
+      label: 'Form',
+      action: { type: 'setVar', var: 'index', value: '0' }
+    },
+    {
+      icon: ui('Icon', { icon: 'person' }),
+      label: 'Profile',
+      action: { type: 'setVar', var: 'index', value: '1' }
+    }
+  ]
+});</code></pre>
+        <p>See the full field list in <a href="widgets.html">Widgets Reference</a> under <code>Sidebar</code>, <code>SidebarWithUI</code>, and <code>NavigationRail</code>.</p>
+      </section>
+
+      <section id="controls">
+        <h2>Controls</h2>
+        <p>The Flutter widget registry is now split into smaller files under <code>remx/lib/plugin/registers/</code>. Widgets like <code>Tabs</code>, <code>Radio</code>, <code>Checkbox</code>, <code>Slider</code>, <code>DatePicker</code>, and <code>Timeout</code> live there so the registry can grow without staying monolithic.</p>
+        <p>See the widget reference for field-by-field schema details and examples.</p>
+      </section>
+
+      <section id="prefs">
+        <h2>Preference Conditions</h2>
+        <p>Client sends preference presence in request context as:</p>
+<pre><code>{
+  "prefs": {
+    "token": { "isPresent": true, "value": "abc123" }
+  }
+}</code></pre>
+        <p>Then backend can evaluate:</p>
+<pre><code>equate('prefs.token.isPresent', 'true', {
+  child: ui('Text', { text: 'Token exists' })
+});</code></pre>
+        <p>And direct value reads work too:</p>
+<pre><code>ui('Text', { text: 'Token: {prefs.token}' })</code></pre>
+      </section>
+
+      <section id="exceptional">
+        <h2>Exceptional Widgets</h2>
+        <p>These are widgets or behaviors that do not behave like ordinary plain JSON wrappers and need special handling in the runtime.</p>
+        <div class="grid">
+          <div class="card">
+            <strong>condition</strong>
+            Renders conditionally and supports chained <code>elseIf</code> branches.
+          </div>
+          <div class="card">
+            <strong>Text</strong>
+            Supports template interpolation. Missing values keep their placeholder text so Foreach can decide whether to show or hide.
+          </div>
+          <div class="card">
+            <strong>TextField</strong>
+            Holds live state in runtime variables and can submit through the shared callback path.
+          </div>
+          <div class="card">
+            <strong>Icon</strong>
+            Backend resolves icon names to Material codepoints before the JSON is sent.
+          </div>
+          <div class="card">
+            <strong>FilledButton / ElevatedButton / OutlinedButton</strong>
+            These delegate click handling to the shared click dispatcher rather than custom per-widget logic.
+          </div>
+          <div class="card">
+            <strong>Dialog</strong>
+            Dialog pages are opened with <code>nav('/ui/path', 'dialog')</code> and stay layered over the current page.
+          </div>
+          <div class="card">
+            <strong>Sidebar / NavigationRail</strong>
+            Both are variable-reactive navigation widgets and can infer active state from <code>setVar</code> actions.
+          </div>
+          <div class="card">
+            <strong>Foreach</strong>
+            Supports remote requests, inline JSON variables, live updates on variable changes, and <code>$token$</code> row interpolation.
+          </div>
+          <div class="card">
+            <strong>callbacks</strong>
+            Root-level callbacks are executed after the page loads, not during widget build.
+          </div>
+        </div>
+      </section>
+
+      <section id="files">
+        <h2>File Layout</h2>
+        <ul>
+          <li><code>remui.ts</code>: backend DSL, callback builder, icon resolver, variable runtime</li>
+          <li><code>index.ts</code>: route definitions and callback handlers</li>
+          <li><code>remx/lib/plugin/remui.dart</code>: Flutter transport and runtime state</li>
+          <li><code>remx/lib/plugin/clicks.dart</code>: action execution and callback application</li>
+          <li><code>remx/lib/plugin/registers.dart</code>: JSON widget registry and condition renderer</li>
+          <li><code>remx/lib/plugin/registers/</code>: modular registry parts for feature-specific widgets</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

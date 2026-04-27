@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RemUI Widgets Reference</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --ink: #101828;
+      --muted: #475467;
+      --accent: #0f766e;
+      --accent-2: #0d47a1;
+      --line: #d0d5dd;
+      --code: #0f172a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #edf3ff 0%, #f8fafc 100%);
+      color: var(--ink);
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.55;
+      overflow-x: hidden;
+    }
+
+    header {
+      background: linear-gradient(135deg, #0d47a1 0%, #0f766e 100%);
+      color: #fff;
+      padding: 28px 20px;
+    }
+
+    .shell {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .shell img {
+      width: 72px;
+      height: 72px;
+      border-radius: 18px;
+      object-fit: cover;
+      border: 2px solid rgba(255,255,255,.35);
+      box-shadow: 0 14px 30px rgba(0,0,0,.18);
+    }
+
+    .shell h1 { margin: 0 0 6px; font-size: 1.9rem; }
+    .shell p { margin: 0; opacity: .95; }
+
+    .layout {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
+      gap: 20px;
+    }
+
+    main {
+      min-width: 0;
+    }
+
+    nav, section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+
+    nav {
+      position: sticky;
+      top: 18px;
+      height: fit-content;
+      padding: 16px;
+    }
+
+    nav a {
+      display: block;
+      text-decoration: none;
+      color: var(--accent-2);
+      margin: 6px 0;
+    }
+
+    main section {
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    h2 { margin-top: 0; color: var(--accent); }
+    h3 { margin-bottom: 8px; }
+    p { color: var(--muted); }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .tag {
+      background: #ecfeff;
+      color: #155e75;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: .82rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .card strong { display: block; margin-bottom: 4px; }
+
+    code, pre {
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    pre {
+      margin: 8px 0 0;
+      background: var(--code);
+      color: #e2e8f0;
+      padding: 12px;
+      border-radius: 10px;
+      overflow-x: hidden;
+      border: 1px solid #1e293b;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    code {
+      word-break: break-word;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      border-radius: 10px;
+      table-layout: fixed;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      vertical-align: top;
+      text-align: left;
+      word-break: break-word;
+    }
+
+    th { background: #eef2ff; }
+
+    .note {
+      border-left: 4px solid var(--accent);
+      padding: 10px 12px;
+      background: #ecfeff;
+      color: #164e63;
+      border-radius: 4px;
+    }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      nav { position: static; }
+      .grid { grid-template-columns: 1fr; }
+      .shell { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell">
+      <img src="logo.jpg" alt="RemUI logo" />
+      <div>
+        <h1>Widgets Reference</h1>
+        <p style="color: white">Registry-driven widget guide for RemUI. Every widget below is sourced from <code>registers.dart</code>.</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav>
+      <strong>Widgets</strong>
+      <a href="#text">Text</a>
+      <a href="#appbar">AppBar</a>
+      <a href="#condition">condition</a>
+      <a href="#center">Center</a>
+      <a href="#avatar">Avatar</a>
+      <a href="#iconbutton">IconButton</a>
+      <a href="#textfield">TextField</a>
+      <a href="#icon">Icon</a>
+      <a href="#padding">Padding</a>
+      <a href="#column">Column</a>
+      <a href="#row">Row</a>
+      <a href="#scroll">SingleChildScrollView</a>
+      <a href="#scaffold">Scaffold</a>
+      <a href="#sidebarwithui">SidebarWithUI</a>
+      <a href="#sidebar">Sidebar</a>
+      <a href="#navigationrail">NavigationRail</a>
+      <a href="#bottomnavigationbar">BottomNavigationBar</a>
+      <a href="#rembottomnavbar">RemBottomNavbar</a>
+      <a href="#remdropdowns">RemDropdowns</a>
+      <a href="#remnavbar">RemNavbar</a>
+      <a href="#initialization">Initialization</a>
+      <a href="#foreach">Foreach</a>
+      <a href="#dialog">Dialog</a>
+      <a href="#gridview">GridView</a>
+      <a href="#card">Card</a>
+      <a href="#container">Container</a>
+      <a href="#sizedbox">SizedBox</a>
+      <a href="#image">Image</a>
+      <a href="#buttons">Buttons</a>
+      <a href="#tabs">Tabs</a>
+      <a href="#radio">Radio</a>
+      <a href="#checkbox">Checkbox</a>
+      <a href="#slider">Slider</a>
+      <a href="#datepicker">DatePicker</a>
+      <a href="#timeout">Timeout</a>
+      <a href="#metadata">Metadata</a>
+      <a href="#notes">Notes</a>
+    </nav>
+
+    <main>
+      <section id="notes">
+        <h2>Notes</h2>
+        <div class="note">Brace interpolation works on any string field now, including text, URLs, labels, and other JSON string values. Missing values stay unresolved so Foreach can hide undeclared sources cleanly.</div>
+        <div class="note">Foreach uses <code>$name$</code>-style row placeholders. Use <code>{vars}</code> for normal server/runtime values and <code>$row.fields$</code> inside repeated templates.</div>
+        <div class="note">Navigation supports both page pushes and modal dialogs. Use <code>nav('/ui/path')</code> for pages and <code>nav('/ui/path', 'dialog')</code> for overlays that keep the background page visible.</div>
+        <div class="note"><code>remSharedPref</code> removes one or more SharedPreferences keys from callback payloads.</div>
+        <div class="meta">
+          <span class="tag">JSON-first</span>
+          <span class="tag">Backend-built</span>
+          <span class="tag">Flutter-rendered</span>
+        </div>
+      </section>
+
+      <section id="metadata">
+        <h2>Metadata</h2>
+        <p>Every widget node now has chainable metadata helpers. Use <code>.meta()</code> for page metadata such as title and description, and <code>.tag()</code> / <code>.alt()</code> for SSR-friendly HTML hints on regular widgets.</p>
+<pre><code>ui('Scaffold', {
+  body: ui('Text', { text: 'Hello' })
+})
+  .meta('title', 'Hello Page')
+  .meta('description', 'SSR demo');</code></pre>
+      </section>
+
+      <section id="initialization">
+        <h2>Initialization</h2>
+        <p>Use <code>RemUI.init</code> to set the backend URL, runtime config, custom widget registers, custom pages, and page action handlers.</p>
+<pre><code>RemUI.init(
+  "http://localhost:3000",
+  {"mediaQuery": true},
+  registers: {
+    "TextO": (j) => ui('Text', { text: j["text"]?.toString() ?? '' })
+  },
+  pages: {
+    ".page_cd_a": (j) => PageCDA(j)
+  },
+  pageFunction: {
+    ".main": (onClick, url) {
+      if (url == "/next") {
+        RemUI.changePage("/ui/next");
+      }
+    }
+  }
+);</code></pre>
+        <div class="note">Custom registers override built-in widget types when the names match. Custom pages can be Flutter-only widgets and do not need to come from the RemUI server.</div>
+      </section>
+
+      <section id="text">
+        <h2>Text</h2>
+        <p>Plain text rendering with template interpolation, font styling, overflow, and optional tap action.</p>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>text</code></td><td>string</td><td>Displayed text. Supports <code>{vars}</code> / <code>{prefs.key}</code> placeholders.</td></tr>
+          <tr><td><code>color</code></td><td>string</td><td>Hex, named, or theme color.</td></tr>
+          <tr><td><code>fontSize</code></td><td>number</td><td>Text size in logical pixels.</td></tr>
+          <tr><td><code>fontWeight</code></td><td>string | number</td><td>Resolved via <code>Resolv.fontWeight</code>.</td></tr>
+          <tr><td><code>overflow</code></td><td>string</td><td>Maps to Flutter <code>TextOverflow</code>.</td></tr>
+          <tr><td><code>action</code></td><td>string | object</td><td>Optional click behavior.</td></tr>
+        </table>
+<pre><code>ui('Text', {
+  text: 'Hello {prefs.name}',
+  color: '#37474f',
+  fontSize: 18,
+  fontWeight: 'bold'
+});</code></pre>
+      </section>
+
+      <section id="appbar">
+        <h2>AppBar</h2>
+        <p>Top app bar with title and actions.</p>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>title</code></td><td>string | widget</td><td>App bar title.</td></tr>
+          <tr><td><code>actions</code></td><td>list | object</td><td>Action widgets shown on the right.</td></tr>
+          <tr><td><code>centerTitle</code></td><td>boolean</td><td>Centers the title.</td></tr>
+          <tr><td><code>backgroundColor</code></td><td>string</td><td>App bar background color.</td></tr>
+        </table>
+      </section>
+
+      <section id="condition">
+        <h2>condition</h2>
+        <p>Produced by <code>equate()</code>. The renderer treats the root and chained <code>elseIf</code> nodes as a normal if/else-if chain.</p>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>var</code></td><td>string</td><td>Variable key to compare.</td></tr>
+          <tr><td><code>eq</code></td><td>string | number | boolean</td><td>Comparison value.</td></tr>
+          <tr><td><code>child</code></td><td>widget</td><td>Rendered when matched.</td></tr>
+          <tr><td><code>elseIf</code></td><td>condition | list</td><td>Chained fallback condition.</td></tr>
+        </table>
+<pre><code>equate('index', '0', {
+  child: ui('Text', { text: 'Zero' })
+}).equate('index', '1', {
+  child: ui('Text', { text: 'One' })
+});</code></pre>
+      </section>
+
+      <section id="center">
+        <h2>Center</h2>
+        <p>Centers a single child.</p>
+<pre><code>ui('Center', {
+  child: ui('Text', { text: 'Centered' })
+});</code></pre>
+      </section>
+
+      <section id="avatar">
+        <h2>Avatar</h2>
+        <p>CircleAvatar-style helper for easy profile images or initials.</p>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>imageUrl</code></td><td>string</td><td>Remote image URL.</td></tr>
+          <tr><td><code>src</code></td><td>string</td><td>Alias for <code>imageUrl</code>.</td></tr>
+          <tr><td><code>radius</code></td><td>number</td><td>Avatar radius.</td></tr>
+          <tr><td><code>size</code></td><td>number</td><td>Convenience width/height; radius is derived if not set.</td></tr>
+          <tr><td><code>backgroundColor</code></td><td>string</td><td>Fallback background color.</td></tr>
+          <tr><td><code>foregroundColor</code></td><td>string</td><td>Child/text color.</td></tr>
+          <tr><td><code>child</code></td><td>widget | string</td><td>Shown when no image URL is supplied.</td></tr>
+        </table>
+<pre><code>ui('Avatar', {
+  imageUrl: '{prefs.avatarUrl}',
+  size: 56,
+  backgroundColor: '#dbeafe',
+  child: 'R'
+});</code></pre>
+      </section>
+
+      <section id="iconbutton">
+        <h2>IconButton</h2>
+        <p>Clickable icon that uses the shared click dispatcher.</p>
+<pre><code>ui('IconButton', {
+  icon: ui('Icon', { icon: 'screen_search_desktop' }),
+  onPressed: nav('/ui/search')
+});</code></pre>
+      </section>
+
+      <section id="textfield">
+        <h2>TextField</h2>
+        <p>Bound text input with live runtime variable syncing.</p>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>variable</code></td><td>string</td><td>Runtime variable name to sync with.</td></tr>
+          <tr><td><code>labelText</code></td><td>string</td><td>Input label.</td></tr>
+          <tr><td><code>hintText</code></td><td>string</td><td>Placeholder text.</td></tr>
+          <tr><td><code>obscureText</code></td><td>boolean</td><td>Password mode.</td></tr>
+          <tr><td><code>leading</code></td><td>widget | string</td><td>Prefix icon or widget.</td></tr>
+          <tr><td><code>keyboardType</code></td><td>string</td><td>Email, number, phone, url, multiline, datetime.</td></tr>
+        </table>
+      </section>
+
+      <section id="icon">
+        <h2>Icon</h2>
+        <p>Material icon resolution happens on the backend. Use icon names rather than hardcoding codepoints when possible.</p>
+<pre><code>ui('Icon', {
+  icon: 'home',
+  color: '#0d47a1'
+});</code></pre>
+      </section>
+
+      <section id="padding">
+        <h2>Padding</h2>
+<pre><code>ui('Padding', {
+  padding: 16,
+  child: ui('Text', { text: 'Spaced' })
+});</code></pre>
+      </section>
+
+      <section id="column">
+        <h2>Column</h2>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>children</code></td><td>list</td><td>Children widgets.</td></tr>
+          <tr><td><code>mainAxis</code> / <code>mainAxisAlignment</code></td><td>string</td><td>start, end, center, spaceBetween, spaceAround, spaceEvenly.</td></tr>
+          <tr><td><code>crossAxis</code> / <code>crossAxisAlignment</code></td><td>string</td><td>start, end, center, stretch, baseline.</td></tr>
+        </table>
+      </section>
+
+      <section id="row">
+        <h2>Row</h2>
+        <p>Same alignment support as Column, but laid out horizontally.</p>
+      </section>
+
+      <section id="scroll">
+        <h2>SingleChildScrollView</h2>
+        <p>Wraps one child in scrollable space.</p>
+      </section>
+
+      <section id="scaffold">
+        <h2>Scaffold</h2>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>appBar</code></td><td>widget</td><td>App bar widget.</td></tr>
+          <tr><td><code>body</code></td><td>widget</td><td>Page body.</td></tr>
+          <tr><td><code>drawer</code></td><td>widget</td><td>Navigation drawer.</td></tr>
+          <tr><td><code>bottomNavigationBar</code></td><td>widget</td><td>Bottom navigation area.</td></tr>
+          <tr><td><code>floatingActionButton</code></td><td>widget</td><td>FAB widget.</td></tr>
+        </table>
+      </section>
+
+      <section id="sidebarwithui">
+        <h2>SidebarWithUI</h2>
+        <p>Desktop/tablet shell that places a sidebar on the left and your page content on the right.</p>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>sidebar</code></td><td>widget</td><td>Usually <code>ui('Sidebar', ...)</code> or <code>ui('NavigationRail', ...)</code>.</td></tr>
+          <tr><td><code>child</code></td><td>widget</td><td>Main content area.</td></tr>
+          <tr><td><code>backgroundColor</code></td><td>string</td><td>Optional shell background.</td></tr>
+          <tr><td><code>showDivider</code></td><td>boolean</td><td>Show/hide the center divider.</td></tr>
+          <tr><td><code>dividerColor</code></td><td>string</td><td>Divider color.</td></tr>
+          <tr><td><code>contentPadding</code></td><td>number</td><td>Padding for the right-side content.</td></tr>
+        </table>
+      </section>
+
+      <section id="sidebar">
+        <h2>Sidebar</h2>
+        <p>Styled vertical navigation with active state, icons, badges, and optional footer.</p>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>items</code></td><td>list</td><td>Navigation entries.</td></tr>
+          <tr><td><code>variable</code></td><td>string</td><td>Tracked state variable. If omitted, inferred from item <code>setVar</code> actions.</td></tr>
+          <tr><td><code>currentIndex</code></td><td>number</td><td>Fallback selected index if no variable value exists.</td></tr>
+          <tr><td><code>showHeader</code></td><td>boolean</td><td>Show/hide the default header row.</td></tr>
+          <tr><td><code>header</code></td><td>widget</td><td>Custom header widget (overrides title/subtitle/icon row).</td></tr>
+          <tr><td><code>title</code>, <code>subtitle</code>, <code>headerIcon</code></td><td>string</td><td>Default header content when no custom header widget is used.</td></tr>
+          <tr><td><code>showDivider</code>, <code>showChevron</code></td><td>boolean</td><td>Header divider and right-chevron visibility controls.</td></tr>
+          <tr><td><code>color</code>, <code>accentColor</code>, <code>textColor</code>, <code>subtitleColor</code></td><td>string</td><td>Palette controls for container and content.</td></tr>
+          <tr><td><code>selectedGradientStart</code>, <code>selectedGradientEnd</code></td><td>string</td><td>Selected item gradient colors.</td></tr>
+          <tr><td><code>selectedLabelColor</code>, <code>itemColor</code>, <code>borderColor</code></td><td>string</td><td>Fine-tuned item style colors.</td></tr>
+          <tr><td><code>itemSpacing</code>, <code>itemRadius</code>, <code>itemPaddingX</code>, <code>itemPaddingY</code></td><td>number</td><td>Item spacing, radius, and padding.</td></tr>
+          <tr><td><code>iconBoxSize</code>, <code>iconRadius</code>, <code>iconSize</code></td><td>number</td><td>Icon container size/shape controls.</td></tr>
+          <tr><td><code>footer</code></td><td>widget | string</td><td>Optional bottom area.</td></tr>
+        </table>
+<pre><code>ui('Sidebar', {
+  variable: 'index',
+  title: 'Workspace',
+  subtitle: 'RemUI Demo',
+  accentColor: '#2454FF',
+  itemRadius: 16,
+  items: [
+    {
+      icon: ui('Icon', { icon: 'home' }),
+      label: 'Form',
+      subtitle: 'Main auth form',
+      badge: 'NEW',
+      action: { type: 'setVar', var: 'index', value: '0' }
+    },
+    {
+      icon: ui('Icon', { icon: 'person' }),
+      label: 'Profile',
+      action: { type: 'setVar', var: 'index', value: '1' }
+    }
+  ]
+});</code></pre>
+      </section>
+
+      <section id="navigationrail">
+        <h2>NavigationRail</h2>
+        <p>Support for Flutter Material <code>NavigationRail</code>, ideal for wider layouts and tablet/desktop navigation.</p>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>destinations</code> / <code>items</code></td><td>list</td><td>Rail destination list.</td></tr>
+          <tr><td><code>variable</code></td><td>string</td><td>Selected index variable. Inferred from actions when possible.</td></tr>
+          <tr><td><code>selectedIndex</code> / <code>currentIndex</code></td><td>number</td><td>Fallback selected index.</td></tr>
+          <tr><td><code>labelType</code></td><td>string</td><td><code>none</code>, <code>selected</code>, or <code>all</code>.</td></tr>
+          <tr><td><code>extended</code>, <code>minWidth</code>, <code>minExtendedWidth</code></td><td>boolean / number</td><td>Rail expansion and sizing controls.</td></tr>
+          <tr><td><code>groupAlignment</code></td><td>number</td><td>Vertical alignment (-1 top, 0 center, 1 bottom).</td></tr>
+          <tr><td><code>backgroundColor</code>, <code>indicatorColor</code></td><td>string</td><td>Rail styling colors.</td></tr>
+          <tr><td><code>selectedIconColor</code>, <code>unselectedIconColor</code></td><td>string</td><td>Icon state colors.</td></tr>
+          <tr><td><code>selectedLabelColor</code>, <code>unselectedLabelColor</code></td><td>string</td><td>Label state colors.</td></tr>
+          <tr><td><code>leading</code>, <code>trailing</code></td><td>widget</td><td>Optional top/bottom rail widgets.</td></tr>
+        </table>
+<pre><code>ui('NavigationRail', {
+  variable: 'index',
+  labelType: 'all',
+  extended: false,
+  useIndicator: true,
+  destinations: [
+    {
+      icon: ui('Icon', { icon: 'home' }),
+      selectedIcon: ui('Icon', { icon: 'home_filled' }),
+      label: 'Form',
+      action: { type: 'setVar', var: 'index', value: '0' }
+    },
+    {
+      icon: ui('Icon', { icon: 'person' }),
+      label: 'Profile',
+      action: { type: 'setVar', var: 'index', value: '1' }
+    }
+  ]
+});</code></pre>
+      </section>
+
+      <section id="bottomnavigationbar">
+        <h2>BottomNavigationBar</h2>
+        <p>Reactive bottom navigation bound to runtime vars.</p>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>items</code></td><td>list</td><td>Each item supports <code>icon</code>, <code>label</code>, and action payloads.</td></tr>
+          <tr><td><code>variable</code></td><td>string</td><td>Tracked variable used for current index.</td></tr>
+          <tr><td><code>currentIndex</code></td><td>number</td><td>Fallback if variable is not set.</td></tr>
+        </table>
+      </section>
+
+      <section id="rembottomnavbar">
+        <h2>RemBottomNavbar</h2>
+        <p>Custom, modern, scrollable bottom navigation with active/inactive states and support for Material icons, PNG URLs, and SVG URLs (with tint).</p>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>variable</code></td><td>string</td><td>Tracked variable for selected index.</td></tr>
+          <tr><td><code>currentIndex</code></td><td>number|string</td><td>Fallback selected index.</td></tr>
+          <tr><td><code>items</code></td><td>list</td><td>Item list with <code>label</code>, <code>icon</code>, and optional actions.</td></tr>
+          <tr><td><code>activeColor</code></td><td>string</td><td>Active icon/label tint.</td></tr>
+          <tr><td><code>noActiveColor</code> / <code>inactiveColor</code></td><td>string</td><td>Inactive icon/label tint.</td></tr>
+          <tr><td><code>itemSpacing</code>, <code>iconSize</code>, <code>height</code></td><td>number</td><td>Layout and sizing controls.</td></tr>
+        </table>
+<pre><code>ui('RemBottomNavbar', {
+  variable: 'remBottomIndex',
+  currentIndex: '{remBottomIndex}',
+  activeColor: '#0D47A1',
+  noActiveColor: '#64748B',
+  items: [
+    { label: 'Home', icon: ui('Icon', { icon: 'home' }) },
+    { label: 'Customers', icon: 'https://.../user.png' },
+    { label: 'SVG Icon', icon: 'https://.../icon.svg' }
+  ]
+});</code></pre>
+      </section>
+
+      <section id="remdropdowns">
+        <h2>RemDropdowns</h2>
+        <p>Professional dropdown menu row with recursive submenu support. Works standalone or embedded inside <code>RemNavbar</code>.</p>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>dropdowns</code></td><td>list</td><td>Entries with <code>name</code>, <code>icon</code>, optional action, and optional nested <code>dropdowns</code>.</td></tr>
+          <tr><td><code>textColor</code>, <code>hoverColor</code>, <code>backgroundColor</code></td><td>string</td><td>Menu styling.</td></tr>
+          <tr><td><code>compactBreakpoint</code></td><td>number</td><td>Switch to compact/smaller behavior below this width.</td></tr>
+        </table>
+<pre><code>ui('RemDropdowns', {
+  dropdowns: [
+    { name: 'Dashboard', icon: ui('Icon', { icon: 'dashboard' }), action: { type: 'setVar', var: 'mode', value: 'dashboard' } },
+    { name: 'Products', icon: ui('Icon', { icon: 'inventory_2' }), dropdowns: [
+      { name: 'Catalog', icon: ui('Icon', { icon: 'list_alt' }) },
+      { name: 'Stock', icon: ui('Icon', { icon: 'store' }), dropdowns: [
+        { name: 'Warehouse A', icon: ui('Icon', { icon: 'warehouse' }) }
+      ] }
+    ] }
+  ]
+});</code></pre>
+      </section>
+
+      <section id="remnavbar">
+        <h2>RemNavbar</h2>
+        <p>Composite navigation bar with logo, title, search field, and recursive dropdown support. On small screens it compacts into a 3-line style layout.</p>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>logo</code></td><td>widget</td><td>Typically an <code>Image</code> widget.</td></tr>
+          <tr><td><code>title</code></td><td>widget|string</td><td>Main title content.</td></tr>
+          <tr><td><code>searchTextField</code></td><td>widget</td><td>Optional search input widget.</td></tr>
+          <tr><td><code>dropdowns</code></td><td>widget|list</td><td>Either <code>ui('RemDropdowns', ...)</code> or direct dropdown definitions.</td></tr>
+          <tr><td><code>compactBreakpoint</code></td><td>number</td><td>Responsive breakpoint for compact mode.</td></tr>
+          <tr><td><code>backgroundColor</code>, <code>borderColor</code>, <code>titleColor</code></td><td>string</td><td>Navbar styling.</td></tr>
+        </table>
+<pre><code>const drops = ui('RemDropdowns', {
+  dropdowns: [
+    { name: 'Text', icon: ui('Icon', { icon: 'text_fields' }), onPressed: { type: 'setVar', var: 'mode', value: 'text' } },
+    { name: 'Test', icon: ui('Icon', { icon: 'science' }), dropdowns: [
+      { name: 'Nested', icon: ui('Icon', { icon: 'expand_more' }) }
+    ] }
+  ]
+});
+
+ui('RemNavbar', {
+  logo: ui('Image', { src: 'http://localhost:3000/logo.jpg', width: 30, height: 30 }),
+  title: ui('Text', { text: 'RemUI Navbar' }),
+  searchTextField: ui('TextField', { variable: 'search', hintText: 'Search...' }),
+  dropdowns: drops
+});</code></pre>
+        <p>See <code>/ui/remui</code> for the complete live example page.</p>
+      </section>
+
+      <section id="foreach">
+        <h2>Foreach</h2>
+        <p>Repeats a template for every item in a remote response or inline JSON variable. Use <code>$field$</code> inside the repeated template so it does not conflict with server-side <code>{vars}</code> interpolation.</p>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>url</code></td><td>string</td><td>Remote request or inline JSON source. Example: <code>GET:https://api...</code> or <code>{abd}</code>.</td></tr>
+          <tr><td><code>toForeach</code></td><td>string</td><td>Path to the array. Use <code>data</code> for API responses or <code>.</code> for root arrays.</td></tr>
+          <tr><td><code>data</code></td><td>widget</td><td>Template repeated for each item.</td></tr>
+          <tr><td><code>loading</code></td><td>widget</td><td>Shown while the request is in flight.</td></tr>
+          <tr><td><code>fallback</code></td><td>widget</td><td>Shown when the source is missing, empty, or invalid.</td></tr>
+          <tr><td><code>spacing</code></td><td>number</td><td>Gap between repeated items.</td></tr>
+        </table>
+<pre><code>ui('foreach', {
+  url: 'GET:http://localhost:3000/api/demo/users',
+  toForeach: 'data',
+  data: ui('Text', { text: '$name$ - $role$' })
+});
+
+ui('foreach', {
+  url: '{abd}',
+  toForeach: '.',
+  data: ui('Text', { text: 'Heres $char$' })
+});</code></pre>
+      </section>
+
+      <section id="dialog">
+        <h2>Dialog</h2>
+        <p>Modal dialog page rendered by the registry. Use it when you want the UI to appear above the current page instead of replacing it.</p>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>page</code></td><td>string</td><td>Usually a dialog route tag such as <code>.diag</code>.</td></tr>
+          <tr><td><code>title</code></td><td>widget | string</td><td>Optional dialog title.</td></tr>
+          <tr><td><code>body</code></td><td>widget</td><td>Main dialog content.</td></tr>
+          <tr><td><code>actions</code></td><td>list</td><td>Action widgets shown at the bottom.</td></tr>
+          <tr><td><code>backgroundColor</code></td><td>string</td><td>Dialog background tint.</td></tr>
+          <tr><td><code>borderRadius</code></td><td>number</td><td>Corner radius.</td></tr>
+        </table>
+<pre><code>ui('Dialog', {
+  page: '.diag',
+  title: ui('Text', { text: 'Dialog Title' }),
+  body: ui('Text', { text: 'Dialog content here' }),
+  actions: [
+    ui('TextButton', {
+      color: '#0d47a1',
+      action: nav('/ui/dialogTest', 'dialog'),
+      child: ui('Text', { text: 'Open' })
+    })
+  ]
+});</code></pre>
+      </section>
+
+      <section id="gridview">
+        <h2>GridView</h2>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>crossAxisCount</code></td><td>number</td><td>Column count.</td></tr>
+          <tr><td><code>shrinkWrap</code></td><td>boolean</td><td>Wrap content height.</td></tr>
+          <tr><td><code>scrollDirection</code></td><td>string</td><td>horizontal or vertical.</td></tr>
+          <tr><td><code>physics</code></td><td>string</td><td>Use <code>neverScrollable</code> for locked scrolling.</td></tr>
+          <tr><td><code>mainAxisSpacing</code></td><td>number</td><td>Spacing between rows.</td></tr>
+          <tr><td><code>crossAxisSpacing</code></td><td>number</td><td>Spacing between columns.</td></tr>
+          <tr><td><code>childAspectRatio</code></td><td>number</td><td>Width/height ratio.</td></tr>
+        </table>
+      </section>
+
+      <section id="card">
+        <h2>Card</h2>
+        <p>Simple card wrapper with optional color.</p>
+      </section>
+
+      <section id="container">
+        <h2>Container</h2>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>width</code></td><td>number</td><td>Width in logical pixels.</td></tr>
+          <tr><td><code>height</code></td><td>number</td><td>Height in logical pixels.</td></tr>
+          <tr><td><code>backgroundImage</code></td><td>string</td><td>Remote image URL.</td></tr>
+          <tr><td><code>borderRadius</code></td><td>number</td><td>Rounded corners.</td></tr>
+          <tr><td><code>color</code></td><td>string</td><td>Background color.</td></tr>
+          <tr><td><code>child</code></td><td>widget</td><td>Nested content.</td></tr>
+        </table>
+      </section>
+
+      <section id="sizedbox">
+        <h2>SizedBox</h2>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>width</code></td><td>number</td><td>Width in logical pixels.</td></tr>
+          <tr><td><code>height</code></td><td>number | <code>mediaQuery</code></td><td>Height or full screen height.</td></tr>
+          <tr><td><code>child</code></td><td>widget</td><td>Nested content.</td></tr>
+        </table>
+      </section>
+
+      <section id="image">
+        <h2>Image</h2>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>src</code></td><td>string</td><td>URL or asset path.</td></tr>
+          <tr><td><code>width</code></td><td>number</td><td>Width.</td></tr>
+          <tr><td><code>height</code></td><td>number</td><td>Height.</td></tr>
+          <tr><td><code>scale</code></td><td>number</td><td>Image scale.</td></tr>
+          <tr><td><code>fit</code></td><td>string</td><td>BoxFit name such as contain or cover.</td></tr>
+          <tr><td><code>color</code></td><td>string</td><td>Tint color.</td></tr>
+        </table>
+      </section>
+
+      <section id="buttons">
+        <h2>Buttons</h2>
+        <p><code>ElevatedButton</code>, <code>FilledButton</code>, <code>OutlinedButton</code>, and <code>TextButton</code> all use the shared click handler.</p>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>child</code></td><td>widget</td><td>Button content.</td></tr>
+          <tr><td><code>color</code></td><td>string</td><td>Background or outline color.</td></tr>
+          <tr><td><code>action</code></td><td>string | object</td><td>submit, nav, setVar, dialog nav, etc.</td></tr>
+        </table>
+<pre><code>ui('FilledButton', {
+  color: '#00695c',
+  action: {
+    action: 'submit',
+    id: '#cb1001',
+    variables: ['name', 'password']
+  },
+  child: ui('Text', { text: 'Submit' })
+});</code></pre>
+<pre><code>ui('TextButton', {
+  color: '#0d47a1',
+  action: nav('/ui/dialogTest', 'dialog'),
+  child: ui('Text', { text: 'Open dialog' })
+});</code></pre>
+      </section>
+
+      <section id="tabs">
+        <h2>Tabs</h2>
+        <p>Tabbed navigation with optional TabBarView support. Use <code>tabs</code> or <code>items</code> for labels/icons and <code>children</code> or <code>views</code> for page content.</p>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>variable</code></td><td>string</td><td>Tracks the selected tab index/value.</td></tr>
+          <tr><td><code>tabs</code> / <code>items</code></td><td>list</td><td>Tab definitions with <code>label</code>, <code>icon</code>, <code>selectedIcon</code>, and optional actions.</td></tr>
+          <tr><td><code>children</code> / <code>views</code></td><td>list</td><td>Optional tab content rendered in a <code>TabBarView</code>.</td></tr>
+          <tr><td><code>isScrollable</code></td><td>boolean</td><td>Makes the tab bar scroll horizontally.</td></tr>
+          <tr><td><code>indicatorColor</code></td><td>string</td><td>Tab indicator color.</td></tr>
+          <tr><td><code>labelColor</code> / <code>unselectedLabelColor</code></td><td>string</td><td>Label color controls.</td></tr>
+        </table>
+<pre><code>ui('Tabs', {
+  variable: 'tabIndex',
+  tabs: [
+    { label: 'Overview' },
+    { label: 'Details' },
+    { label: 'Settings' }
+  ],
+  children: [
+    ui('Text', { text: 'Overview content' }),
+    ui('Text', { text: 'Details content' }),
+    ui('Text', { text: 'Settings content' })
+  ]
+});</code></pre>
+      </section>
+
+      <section id="radio">
+        <h2>Radio</h2>
+        <p>Single-choice input bound to a runtime variable or an explicit group value. Reuse it for option lists by giving each radio a different <code>value</code>.</p>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>variable</code></td><td>string</td><td>Bound variable name.</td></tr>
+          <tr><td><code>value</code></td><td>any</td><td>Value written when selected.</td></tr>
+          <tr><td><code>groupValue</code></td><td>any</td><td>Fallback current selection when no variable is provided.</td></tr>
+          <tr><td><code>label</code></td><td>string</td><td>Text label.</td></tr>
+          <tr><td><code>subtitle</code></td><td>string</td><td>Optional helper text.</td></tr>
+          <tr><td><code>tile</code></td><td>boolean</td><td>Use the full <code>RadioListTile</code> wrapper when true.</td></tr>
+        </table>
+<pre><code>ui('Radio', {
+  variable: 'themeChoice',
+  value: 'dark',
+  label: 'Dark mode',
+  subtitle: 'Good for low-light use',
+  tile: true,
+  toggleable: true
+});</code></pre>
+      </section>
+
+      <section id="checkbox">
+        <h2>Checkbox</h2>
+        <p>Boolean input widget bound to a runtime variable. Supports compact inline mode or full tile mode.</p>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>variable</code></td><td>string</td><td>Bound variable key.</td></tr>
+          <tr><td><code>label</code></td><td>string</td><td>Main label text.</td></tr>
+          <tr><td><code>subtitle</code></td><td>string</td><td>Optional helper text (tile mode).</td></tr>
+          <tr><td><code>tile</code></td><td>boolean</td><td>When true, renders <code>CheckboxListTile</code>.</td></tr>
+          <tr><td><code>activeColor</code></td><td>string</td><td>Active check color.</td></tr>
+        </table>
+<pre><code>ui('Checkbox', {
+  variable: 'rememberMe',
+  label: 'Remember me on this device',
+  subtitle: 'Stores your session preferences',
+  tile: true
+});</code></pre>
+      </section>
+
+      <section id="slider">
+        <h2>Slider</h2>
+        <p>Numeric range input bound to runtime variables with optional divisions and value labels.</p>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>variable</code></td><td>string</td><td>Bound variable key for the current value.</td></tr>
+          <tr><td><code>min</code> / <code>max</code></td><td>number</td><td>Range bounds.</td></tr>
+          <tr><td><code>divisions</code></td><td>number</td><td>Step count between min and max.</td></tr>
+          <tr><td><code>showValue</code></td><td>boolean</td><td>Renders a value label under the slider.</td></tr>
+          <tr><td><code>activeColor</code> / <code>inactiveColor</code></td><td>string</td><td>Track colors.</td></tr>
+        </table>
+<pre><code>ui('Slider', {
+  variable: 'confidence',
+  min: 0,
+  max: 100,
+  divisions: 10,
+  showValue: true,
+  title: 'Confidence'
+});</code></pre>
+      </section>
+
+      <section id="datepicker">
+        <h2>DatePicker</h2>
+        <p>Date/time selection input with supported modes: <code>date-only</code>, <code>time-only</code>, and <code>both</code>.</p>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>variable</code></td><td>string</td><td>Target variable key for selected value.</td></tr>
+          <tr><td><code>mode</code></td><td>string</td><td><code>date-only</code>, <code>time-only</code>, or <code>both</code>.</td></tr>
+          <tr><td><code>labelText</code></td><td>string</td><td>Input label.</td></tr>
+          <tr><td><code>hintText</code></td><td>string</td><td>Placeholder before selection.</td></tr>
+          <tr><td><code>width</code></td><td>number</td><td>Optional fixed width.</td></tr>
+        </table>
+<pre><code>ui('DatePicker', {
+  variable: 'meetingDateTime',
+  mode: 'both',
+  labelText: 'Meeting Date & Time',
+  hintText: 'Select date and time',
+  width: 320
+});</code></pre>
+      </section>
+
+      <section id="timeout">
+        <h2>Timeout</h2>
+        <p>Deferred callback executor widget. Useful for delayed state updates, preference writes, or post-render callback orchestration.</p>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>data</code></td><td>object | list</td><td>Callback payload (for example <code>sendBack()</code> output).</td></tr>
+          <tr><td><code>timeout</code> / <code>duration</code> / <code>ms</code></td><td>number</td><td>Optional delay before running <code>data</code>.</td></tr>
+          <tr><td><code>child</code></td><td>widget</td><td>Optional child rendered while waiting.</td></tr>
+        </table>
+<pre><code>ui('Timeout', {
+  data: remui
+    .sendBack()
+    .timeout(1000)
+    .setVar('status', 'ready')
+    .setSharedPref('status=ready')
+});</code></pre>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
