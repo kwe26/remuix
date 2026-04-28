@@ -1,4 +1,4 @@
-part of 'package:remx/plugin/registers.dart';
+part of '../registers.dart';
 
 final Map<String, Widget Function(Map<String, dynamic>)>
 _buttonWidgetsRegistry = {

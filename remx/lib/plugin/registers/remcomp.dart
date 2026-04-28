@@ -1,4 +1,4 @@
-﻿part of 'package:remx/plugin/registers.dart';
+﻿part of '../registers.dart';
 
 bool _isRemoteImageSource(String value) {
   final lower = value.toLowerCase();
@@ -1156,6 +1156,7 @@ _remCompWidgetsRegistry = {
                           final isActive = index == selectedIndex;
                           final hasAction =
                               item["action"] != null ||
+                              item["open"] != null ||
                               item["onClick"] != null ||
                               item["onPressed"] != null ||
                               item["setVar"] != null;

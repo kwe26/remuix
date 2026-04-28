@@ -1,4 +1,4 @@
-part of 'package:remx/plugin/registers.dart';
+part of '../registers.dart';
 
 class _DatePickerField extends StatefulWidget {
   final Map<String, dynamic> json;

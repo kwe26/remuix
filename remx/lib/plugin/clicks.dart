@@ -7,7 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'remui.dart';
 
 Future<void> handleClick(Map<String, dynamic> json) async {
-  final action = json["action"] ?? json["onClick"] ?? json["onPressed"];
+  final action =
+      json["action"] ?? json["open"] ?? json["onClick"] ?? json["onPressed"];
 
   if (action is String) {
     if (action.startsWith("nav:")) {
