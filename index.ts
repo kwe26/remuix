@@ -10,9 +10,11 @@ import {
     loadMaterialIcons,
     nav,
     remui,
+    setPrefs,
     setVar,
     ui,
 } from './remui';
+import { initializeMaterialIcons, getAllIcons } from './remui_icons.ts';
 
 const app = express();
 app.use(cors());
@@ -28,6 +30,14 @@ app.get('/api/demo/users', (_req, res) => {
             { name: 'Grace Hopper', role: 'Engineer' },
             { name: 'Margaret Hamilton', role: 'Architect' },
         ],
+    });
+});
+
+app.get('/api/icons', (_req, res) => {
+    const icons = getAllIcons();
+    res.json({
+        total: icons.length,
+        icons,
     });
 });
 
@@ -414,6 +424,7 @@ app.all('/ui/dialogTest', (req, res) => {
 
     setVar('dialogName', '');
     setVar('dialogEmail', '');
+    setPrefs({ dialogName: '', dialogEmail: '' });
 
     const dialogBody = ui('Padding', {
         padding: 8,
@@ -1155,6 +1166,7 @@ app.post('/ui/callbacks', (req, res) => {
         callback
             .add(SnackBar('Token removed from SharedPreferences'))
             .remSharedPref('token')
+            
             .send();
         return;
     }
@@ -1168,6 +1180,7 @@ app.use(remui.notFound());
 
 async function startServer(): Promise<void> {
     await loadMaterialIcons();
+    await initializeMaterialIcons();
     app.listen(3000, () => {
         console.log('Server is running on port 3000');
     });

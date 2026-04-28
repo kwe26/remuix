@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Material Icons Library</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #f5f1e8 0%, #fffcf7 100%);
+      color: #16202f;
+    }
+
+    body {
+      padding: 24px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: white;
+      border-radius: 24px;
+      padding: 32px;
+      margin-bottom: 32px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e9ded0;
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #153a7a;
+    }
+
+    .subtitle {
+      color: #5a6676;
+      margin: 8px 0 0 0;
+      font-size: 15px;
+    }
+
+    .stats {
+      display: flex;
+      gap: 32px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #5a6676;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #153a7a;
+      margin-top: 4px;
+    }
+
+    .search-box {
+      background: white;
+      border-radius: 18px;
+      padding: 16px 20px;
+      margin-bottom: 32px;
+      border: 2px solid #e9ded0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: border-color 0.2s;
+    }
+
+    .search-box:focus-within {
+      border-color: #153a7a;
+      box-shadow: 0 4px 16px rgba(21, 58, 122, 0.1);
+    }
+
+    .search-box i {
+      color: #b45309;
+      font-size: 20px;
+    }
+
+    #search-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      color: #16202f;
+    }
+
+    #search-input::placeholder {
+      color: #5a6676;
+    }
+
+    .results-info {
+      margin-bottom: 16px;
+      padding: 12px 16px;
+      background: #dce7ff;
+      border-radius: 12px;
+      color: #153a7a;
+      font-size: 14px;
+      font-weight: 500;
+      display: none;
+    }
+
+    .results-info.show {
+      display: block;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: #5a6676;
+    }
+
+    .loading i {
+      font-size: 48px;
+      color: #b45309;
+      display: block;
+      margin-bottom: 16px;
+      animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .icons-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 16px;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .icon-item {
+      background: white;
+      border: 1px solid #e9ded0;
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .icon-item:hover {
+      background: #fffcf7;
+      border-color: #153a7a;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(21, 58, 122, 0.12);
+    }
+
+    .icon-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 60px;
+      width: 100%;
+    }
+
+    .icon-display i {
+      color: #153a7a;
+      font-size: 48px;
+      transition: transform 0.2s;
+    }
+
+    .icon-item:hover .icon-display i {
+      transform: scale(1.1);
+    }
+
+    .icon-info {
+      width: 100%;
+      min-height: 50px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .icon-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: #16202f;
+      word-break: break-word;
+      line-height: 1.3;
+    }
+
+    .icon-codepoint {
+      font-size: 10px;
+      color: #5a6676;
+      font-family: 'Courier New', monospace;
+      margin-top: 4px;
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 60px 20px;
+      color: #5a6676;
+      display: none;
+    }
+
+    .no-results i {
+      font-size: 64px;
+      color: #b45309;
+      display: block;
+      margin-bottom: 16px;
+    }
+
+    .no-results p {
+      font-size: 18px;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 1000;
+      animation: fadeIn 0.2s ease-in;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+      max-width: 400px;
+      width: 90%;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .modal-icon {
+      font-size: 64px;
+      color: #153a7a;
+      margin-bottom: 16px;
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #16202f;
+    }
+
+    .modal-body {
+      margin-bottom: 24px;
+    }
+
+    .info-row {
+      margin-bottom: 16px;
+    }
+
+    .info-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #5a6676;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .info-value {
+      background: #f5f1e8;
+      border: 1px solid #e9ded0;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      color: #16202f;
+      word-break: break-all;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .copy-btn {
+      background: none;
+      border: none;
+      color: #153a7a;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s;
+    }
+
+    .copy-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .copy-btn.copied {
+      color: #0f766e;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #153a7a;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #0f2b5f;
+    }
+
+    .btn-secondary {
+      background: #e9ded0;
+      color: #16202f;
+    }
+
+    .btn-secondary:hover {
+      background: #dcd0be;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 48px;
+      padding: 24px;
+      color: #5a6676;
+      font-size: 13px;
+    }
+
+    a {
+      color: #153a7a;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      .icons-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 12px;
+      }
+
+      header {
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      .stats {
+        gap: 20px;
+      }
+
+      .modal {
+        padding: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Material Design Icons</h1>
+      <p class="subtitle">Flutter's comprehensive Material Icons library (~7999 icons)</p>
+      <div class="stats">
+        <div class="stat">
+          <span class="stat-label">Total Icons</span>
+          <span class="stat-value" id="total-icons">—</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Status</span>
+          <span class="stat-value" id="status">Loading…</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="search-box">
+      <i class="material-icons">search</i>
+      <input
+        type="text"
+        id="search-input"
+        placeholder="Search icons (e.g., home, settings, favorite)..."
+        autocomplete="off"
+      />
+    </div>
+
+    <div id="results-info" class="results-info"></div>
+
+    <div id="loading" class="loading">
+      <i class="material-icons">sync</i>
+      <p>Loading icons from server...</p>
+    </div>
+
+    <div id="icons-grid" class="icons-grid" style="display: none;"></div>
+
+    <div id="no-results" class="no-results">
+      <i class="material-icons">search_off</i>
+      <p>No icons found. Try a different search term.</p>
+    </div>
+  </div>
+
+  <!-- Icon Detail Modal -->
+  <div id="modal-overlay" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-icon">
+          <i id="modal-icon-display" class="material-icons">home</i>
+        </div>
+        <div class="modal-title" id="modal-title">home</div>
+      </div>
+      <div class="modal-body">
+        <div class="info-row">
+          <div class="info-label">Icon Name</div>
+          <div class="info-value">
+            <span id="modal-name">home</span>
+            <button class="copy-btn" data-field="name" title="Copy name">
+              <i class="material-icons">content_copy</i>
+            </button>
+          </div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">Codepoint</div>
+          <div class="info-value">
+            <span id="modal-codepoint">M:0xE88A</span>
+            <button class="copy-btn" data-field="codepoint" title="Copy codepoint">
+              <i class="material-icons">content_copy</i>
+            </button>
+          </div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">Hex Value</div>
+          <div class="info-value">
+            <span id="modal-hex">0xE88A</span>
+            <button class="copy-btn" data-field="hex" title="Copy hex">
+              <i class="material-icons">content_copy</i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="copy-all-btn">Copy All</button>
+        <button class="btn btn-secondary" id="close-modal-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>Material Design Icons sourced from <a href="https://github.com/flutter/flutter">Flutter</a></p>
+    <p>Interactive documentation powered by RemUI</p>
+  </footer>
+
+  <script>
+    const searchInput = document.getElementById('search-input');
+    const iconGrid = document.getElementById('icons-grid');
+    const noResults = document.getElementById('no-results');
+    const loading = document.getElementById('loading');
+    const resultsInfo = document.getElementById('results-info');
+    const totalIconsEl = document.getElementById('total-icons');
+    const statusEl = document.getElementById('status');
+    
+    // Modal elements
+    const modalOverlay = document.getElementById('modal-overlay');
+    const modalTitle = document.getElementById('modal-title');
+    const modalIconDisplay = document.getElementById('modal-icon-display');
+    const modalName = document.getElementById('modal-name');
+    const modalCodepoint = document.getElementById('modal-codepoint');
+    const modalHex = document.getElementById('modal-hex');
+    const copyAllBtn = document.getElementById('copy-all-btn');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    
+    let allItems = [];
+    let currentIconData = null;
+
+    function showModal(iconName, codepoint) {
+      currentIconData = { name: iconName, codepoint, hex: codepoint.replace('M:', '') };
+      
+      modalTitle.textContent = iconName;
+      modalIconDisplay.textContent = iconName;
+      modalName.textContent = iconName;
+      modalCodepoint.textContent = codepoint;
+      modalHex.textContent = codepoint.replace('M:', '');
+      
+      modalOverlay.classList.add('show');
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('show');
+      currentIconData = null;
+    }
+
+    function copyToClipboard(text, button) {
+      navigator.clipboard.writeText(text).then(() => {
+        const originalIcon = button.innerHTML;
+        button.classList.add('copied');
+        button.innerHTML = '<i class="material-icons">check</i>';
+        
+        setTimeout(() => {
+          button.classList.remove('copied');
+          button.innerHTML = originalIcon;
+        }, 1500);
+      });
+    }
+
+    // Modal event listeners
+    closeModalBtn.addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    document.querySelectorAll('.copy-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const field = btn.dataset.field;
+        if (currentIconData) {
+          copyToClipboard(currentIconData[field], btn);
+        }
+      });
+    });
+
+    copyAllBtn.addEventListener('click', () => {
+      if (currentIconData) {
+        const text = `${currentIconData.name} ${currentIconData.codepoint} ${currentIconData.hex}`;
+        copyToClipboard(text, copyAllBtn);
+      }
+    });
+
+    async function loadIcons() {
+      try {
+        const response = await fetch('/api/icons');
+        if (!response.ok) throw new Error('Failed to fetch icons');
+
+        const data = await response.json();
+        const icons = data.icons || [];
+
+        if (icons.length === 0) {
+          throw new Error('No icons received');
+        }
+
+        totalIconsEl.textContent = icons.length.toLocaleString();
+        statusEl.textContent = 'Ready';
+
+        // Render icons
+        iconGrid.innerHTML = icons
+          .map(
+            (icon) => `
+          <div class="icon-item" data-name="${icon.name}" data-codepoint="${icon.codepoint}">
+            <div class="icon-display">
+              <i class="material-icons">${icon.name}</i>
+            </div>
+            <div class="icon-info">
+              <div class="icon-name">${icon.name}</div>
+              <div class="icon-codepoint">${icon.codepoint}</div>
+            </div>
+          </div>
+        `,
+          )
+          .join('');
+
+        allItems = Array.from(document.querySelectorAll('.icon-item'));
+
+        // Attach click listeners
+        allItems.forEach((item) => {
+          item.addEventListener('click', () => {
+            const name = item.dataset.name;
+            const codepoint = item.dataset.codepoint;
+            showModal(name, codepoint);
+          });
+        });
+
+        loading.style.display = 'none';
+        iconGrid.style.display = 'grid';
+      } catch (error) {
+        console.error('Error loading icons:', error);
+        loading.innerHTML =
+          '<i class="material-icons">error_outline</i><p>Failed to load icons. Please refresh the page.</p>';
+        statusEl.textContent = 'Error';
+      }
+    }
+
+    function filterIcons(query) {
+      const q = query.toLowerCase().trim();
+      let visibleCount = 0;
+
+      allItems.forEach((item) => {
+        const name = item.dataset.name.toLowerCase();
+        const codepoint = item.dataset.codepoint.toLowerCase();
+
+        if (q === '' || name.includes(q) || codepoint.includes(q)) {
+          item.style.display = '';
+          visibleCount++;
+        } else {
+          item.style.display = 'none';
+        }
+      });
+
+      if (visibleCount === 0 && q !== '') {
+        iconGrid.style.display = 'none';
+        noResults.style.display = 'block';
+      } else {
+        iconGrid.style.display = 'grid';
+        noResults.style.display = 'none';
+      }
+
+      if (q && visibleCount > 0) {
+        resultsInfo.textContent = `Found ${visibleCount} icon${visibleCount !== 1 ? 's' : ''}`;
+        resultsInfo.classList.add('show');
+      } else {
+        resultsInfo.classList.remove('show');
+      }
+    }
+
+    searchInput.addEventListener('input', (e) => {
+      filterIcons(e.target.value);
+    });
+
+    // Load icons on page load
+    loadIcons();
+  </script>
+</body>
+</html>

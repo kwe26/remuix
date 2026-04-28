@@ -242,6 +242,11 @@
   icon: ui('Icon', { icon: 'open_in_new' }),
   onPressed: nav('/ui/dialogTest', 'dialog')
 });</code></pre>
+        <p>Use <code>navReplace</code> when you want to replace the current route (no back stack).</p>
+<pre><code>ui('IconButton', {
+  icon: ui('Icon', { icon: 'home' }),
+  onPressed: navReplace('/ui/main')
+});</code></pre>
         <h3>Chainable condition</h3>
 <pre><code>equate('index', '0', {
   child: ui('Text', { text: 'Zero' })
@@ -340,6 +345,12 @@ callback
 <pre><code>equate('index', '0', {
   child: ui('Text', { text: 'Visible when index == 0' })
 });</code></pre>
+        <h3>Config value condition (eql)</h3>
+<pre><code>ui('Text', {
+  text: eql('showGreeting', 'true', 'Hello!')
+    .equate('showGreeting', 'false', 'Goodbye')
+    .else('…')
+});</code></pre>
         <h3>Produced JSON shape</h3>
 <pre><code>{
   "type": "condition",
@@ -371,8 +382,13 @@ callback
   callback
     .add(SnackBar('Submitted'))
     .setSharedPref('token=hello')
+    .setPrefs({ theme: 'dark', lang: 'en' })
     .remSharedPref('token')
     .setVar('index', '1')
+    .push('/ui/main')
+    .pushReplace('/ui/home')
+    .pushPage('/ui/main')
+    .pushPageReplace('/ui/home')
     .send();
 });</code></pre>
         <h3>sendBack timeout payload builder</h3>

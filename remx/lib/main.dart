@@ -324,6 +324,8 @@ ThemeData _buildTheme() {
 }
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
   RemUI.init(
     "http://localhost:3000",
     {"mediaQuery": true},

@@ -518,6 +518,11 @@ final Map<String, Widget Function(Map<String, dynamic>)> registry = {
     child: RemUI.buildWidget(j["child"]),
   ),
 
+  "HorizontalScroll": (j) => SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: RemUI.buildWidget(j["child"]),
+  ),
+
   "Icon": (j) => Icon(
     Resolv.icon(j["icon"]),
     size: j["size"] != null ? (j["size"] as num).toDouble() : null,
@@ -701,6 +706,17 @@ final Map<String, Widget Function(Map<String, dynamic>)> registry = {
             )
           : null,
       color: Resolv.color(j["color"], context: RemUI.currentContext),
+      border: j["borderColor"] != null
+          ? Border.all(
+              color:
+                  Resolv.color(
+                    j["borderColor"],
+                    context: RemUI.currentContext,
+                  ) ??
+                  Colors.black,
+              width: (j["borderWidth"] as num?)?.toDouble() ?? 1,
+            )
+          : null,
       borderRadius: j["borderRadius"] != null
           ? BorderRadius.circular((j["borderRadius"] as num).toDouble())
           : null,

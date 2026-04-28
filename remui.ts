@@ -3,7 +3,14 @@ import { createRemUiSsrMiddleware } from './remui_ssr.ts';
 
 export type JsonPrimitive = string | number | boolean | null;
 export type JsonObject = { [key: string]: JsonValue };
-export type JsonValue = JsonPrimitive | JsonNode | JsonObject | ConditionBuilder | SendBackBuilder | JsonValue[];
+export type JsonValue =
+  | JsonPrimitive
+  | JsonNode
+  | JsonObject
+  | ConditionBuilder
+  | EqlBuilder
+  | SendBackBuilder
+  | JsonValue[];
 export type JsonNode = { type: string;[key: string]: JsonValue };
 export type UiChild = JsonNode | ConditionBuilder | JsonPrimitive | undefined;
 export type UiProps = Record<string, JsonValue | undefined>;
@@ -50,6 +57,42 @@ export class ConditionBuilder {
 
   private appendElseIf(next: ConditionBuilder): void {
     let cursor: ConditionBuilder = this;
+
+    while (cursor.elseIf !== undefined) {
+      cursor = cursor.elseIf;
+    }
+
+    cursor.elseIf = next;
+  }
+}
+
+export class EqlBuilder {
+  type = 'eql' as const;
+  var: string;
+  eq: JsonValue;
+  value: JsonValue;
+  elseIf?: EqlBuilder;
+  elseValue?: JsonValue;
+
+  constructor(variable: unknown, eq: JsonValue, value: JsonValue) {
+    this.var = normalizeVarName(variable);
+    this.eq = eq;
+    this.value = value;
+  }
+
+  equate(variable: unknown, eq: JsonValue, value: JsonValue): EqlBuilder {
+    const next = new EqlBuilder(variable, eq, value);
+    this.appendElseIf(next);
+    return this;
+  }
+
+  else(value: JsonValue): EqlBuilder {
+    this.elseValue = value;
+    return this;
+  }
+
+  private appendElseIf(next: EqlBuilder): void {
+    let cursor: EqlBuilder = this;
 
     while (cursor.elseIf !== undefined) {
       cursor = cursor.elseIf;
@@ -109,6 +152,26 @@ class CallbackBuilder {
     });
   }
 
+  setPrefs(entries: Record<string, JsonValue> | string): CallbackBuilder {
+    return this.add({ setPrefs: entries });
+  }
+
+  push(path: string): CallbackBuilder {
+    return this.add({ push: path });
+  }
+
+  pushReplace(path: string): CallbackBuilder {
+    return this.add({ pushReplace: path });
+  }
+
+  pushPage(path: string): CallbackBuilder {
+    return this.push(path);
+  }
+
+  pushPageReplace(path: string): CallbackBuilder {
+    return this.pushReplace(path);
+  }
+
   send(statusCode = 200): void {
     this.res.status(statusCode).json({
       id: this.id,
@@ -155,6 +218,26 @@ export class SendBackBuilder {
         value,
       },
     });
+  }
+
+  setPrefs(entries: Record<string, JsonValue> | string): SendBackBuilder {
+    return this.add({ setPrefs: entries });
+  }
+
+  push(path: string): SendBackBuilder {
+    return this.add({ push: path });
+  }
+
+  pushReplace(path: string): SendBackBuilder {
+    return this.add({ pushReplace: path });
+  }
+
+  pushPage(path: string): SendBackBuilder {
+    return this.push(path);
+  }
+
+  pushPageReplace(path: string): SendBackBuilder {
+    return this.pushReplace(path);
   }
 
   build(): CallbackPayload {
@@ -278,9 +361,32 @@ function isConditionBuilder(value: unknown): value is ConditionBuilder {
   return value instanceof ConditionBuilder;
 }
 
+function isEqlBuilder(value: unknown): value is EqlBuilder {
+  return value instanceof EqlBuilder;
+}
+
 function serializeJsonValue(value: JsonValue): JsonValue {
   if (value instanceof SendBackBuilder) {
     return serializeJsonValue(value.build() as JsonValue);
+  }
+
+  if (isEqlBuilder(value)) {
+    const node: Record<string, JsonValue> = {
+      type: value.type,
+      var: value.var,
+      eq: serializeJsonValue(value.eq),
+      value: serializeJsonValue(value.value),
+    };
+
+    if (value.elseIf !== undefined) {
+      node.elseIf = serializeJsonValue(value.elseIf);
+    }
+
+    if (value.elseValue !== undefined) {
+      node.else = serializeJsonValue(value.elseValue);
+    }
+
+    return node as JsonNode;
   }
 
   if (Array.isArray(value)) {
@@ -477,6 +583,10 @@ function createConditionBuilder(
   return new ConditionBuilder(node);
 }
 
+export function eql(variable: unknown, eq: JsonValue, value: JsonValue): EqlBuilder {
+  return new EqlBuilder(variable, eq, value);
+}
+
 function normalizeVarName(value: unknown): string {
   return String(value).trim();
 }
@@ -519,6 +629,44 @@ export function setVar(name: unknown, value: unknown): JsonNode {
     var: key,
     value: stored,
   };
+}
+
+export function setPrefs(entries: Record<string, JsonValue> | string): JsonNode {
+  const normalized: Record<string, JsonValue> = {};
+
+  if (typeof entries === 'string') {
+    const params = new URLSearchParams(entries);
+    if (params.size > 0) {
+      for (const [key, value] of params.entries()) {
+        normalized[key] = value;
+      }
+    } else {
+      const key = entries.trim();
+      if (key) {
+        normalized[key] = '';
+      }
+    }
+  } else if (entries && typeof entries === 'object') {
+    for (const [key, value] of Object.entries(entries)) {
+      normalized[key] = value;
+    }
+  }
+
+  for (const [key, value] of Object.entries(normalized)) {
+    const stored = toStoredValue(value);
+    if (stored === null || stored === undefined) {
+      setRuntimeVar(`prefs.${key}`, null);
+      setRuntimeVar(`prefs.${key}.isPresent`, 'false');
+    } else {
+      setRuntimeVar(`prefs.${key}`, stored);
+      setRuntimeVar(`prefs.${key}.isPresent`, 'true');
+    }
+  }
+
+  return {
+    type: 'setPrefs',
+    entries: normalized,
+  } as JsonNode;
 }
 
 export function getUiMetadata(node: JsonNode | undefined | null): UiMetadataState | undefined {
@@ -716,6 +864,20 @@ export function nav(path: string, mode: 'page' | 'dialog' = 'page'): string | Js
   }
 
   return `nav:${path}`;
+}
+
+export function navReplace(path: string): JsonNode;
+export function navReplace(path: string, mode: 'page' | 'dialog'): JsonNode;
+export function navReplace(
+  path: string,
+  mode: 'page' | 'dialog' = 'page',
+): JsonNode {
+  return {
+    type: 'nav',
+    path,
+    mode,
+    replace: true,
+  };
 }
 
 export const remui = {

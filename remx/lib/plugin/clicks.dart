@@ -16,6 +16,11 @@ Future<void> handleClick(Map<String, dynamic> json) async {
       return;
     }
 
+    if (action.startsWith("navReplace:")) {
+      RemUI.changePage(action.replaceFirst("navReplace:", ""), history: false);
+      return;
+    }
+
     if (action == "submit") {
       await submitVariables(json);
       return;
@@ -36,7 +41,9 @@ Future<void> handleClick(Map<String, dynamic> json) async {
       final path = normalized["path"]?.toString() ?? "";
       if (path.isEmpty) return;
       final mode = normalized["mode"]?.toString() ?? "page";
-      await RemUI.changePage(path, dialog: mode == "dialog");
+      final replace =
+          normalized["replace"] == true || normalized["history"] == false;
+      await RemUI.changePage(path, dialog: mode == "dialog", history: !replace);
       return;
     }
 
@@ -148,12 +155,34 @@ Future<void> executeCallback(Map<String, dynamic> callback) async {
     await _setSharedPref(callback["setSharedPref"]);
   }
 
+  if (callback.containsKey("setPrefs")) {
+    await _setPrefs(callback["setPrefs"]);
+  }
+
   if (callback.containsKey("setVar")) {
     _applySetVar(callback["setVar"]);
   }
 
   if (callback.containsKey("snackbar")) {
     _showSnackBar(callback["snackbar"]?.toString() ?? "");
+  }
+
+  if (callback.containsKey("pushReplace")) {
+    await _handleNavigationCallback(callback["pushReplace"], replace: true);
+  } else if (callback.containsKey("push")) {
+    await _handleNavigationCallback(callback["push"]);
+  }
+
+  if (callback.containsKey("pushPageReplace")) {
+    await _handleNavigationCallback(callback["pushPageReplace"], replace: true);
+  } else if (callback.containsKey("pushPage")) {
+    await _handleNavigationCallback(callback["pushPage"]);
+  }
+
+  if (callback.containsKey("navReplace")) {
+    await _handleNavigationCallback(callback["navReplace"], replace: true);
+  } else if (callback.containsKey("nav")) {
+    await _handleNavigationCallback(callback["nav"]);
   }
 }
 
@@ -216,6 +245,54 @@ Future<void> _setSharedPref(dynamic value) async {
   final rawValue = text.substring(separator + 1);
   if (name.isEmpty) return;
   await prefs.setString(name, rawValue);
+}
+
+Future<void> _setPrefs(dynamic value) async {
+  if (value is Map) {
+    for (final entry in value.entries) {
+      final name = entry.key.toString().trim();
+      if (name.isEmpty) continue;
+      await _setSharedPref({"name": name, "value": entry.value});
+    }
+    return;
+  }
+
+  if (value is Iterable) {
+    for (final entry in value) {
+      await _setSharedPref(entry);
+    }
+    return;
+  }
+
+  await _setSharedPref(value);
+}
+
+Future<void> _handleNavigationCallback(
+  dynamic value, {
+  bool replace = false,
+}) async {
+  if (value is Map) {
+    final normalized = value.map(
+      (key, value) => MapEntry(key.toString(), value),
+    );
+    final path = normalized["path"]?.toString() ?? "";
+    if (path.isEmpty) return;
+    final mode = normalized["mode"]?.toString() ?? "page";
+    final wantsReplace =
+        replace ||
+        normalized["replace"] == true ||
+        normalized["history"] == false;
+    await RemUI.changePage(
+      path,
+      dialog: mode == "dialog",
+      history: !wantsReplace,
+    );
+    return;
+  }
+
+  final path = value?.toString() ?? "";
+  if (path.isEmpty) return;
+  await RemUI.changePage(path, history: !replace);
 }
 
 void _showSnackBar(String message) {
