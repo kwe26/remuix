@@ -49,11 +49,17 @@ Future<void> handleClick(Map<String, dynamic> json) async {
 
     if (normalized["type"] == "setVar") {
       _applySetVar(normalized);
+      if ((normalized["reloadRetain"] ?? normalized["loadRetain"]) == true) {
+        RemUI.reloadRetain();
+      }
       return;
     }
 
     if (normalized.containsKey("setVar")) {
       _applySetVar(normalized["setVar"]);
+      if ((normalized["reloadRetain"] ?? normalized["loadRetain"]) == true) {
+        RemUI.reloadRetain();
+      }
       return;
     }
 

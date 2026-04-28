@@ -631,6 +631,30 @@ export function setVar(name: unknown, value: unknown): JsonNode {
   };
 }
 
+export function varSet(input: string | { var?: string; value?: unknown } ): SendBackBuilder {
+  const builder = new SendBackBuilder();
+
+  if (typeof input === 'string') {
+    const separator = input.indexOf('=');
+    if (separator > 0) {
+      const name = input.substring(0, separator).trim();
+      const rawValue = input.substring(separator + 1);
+      if (name) {
+        builder.setVar(name, toStoredValue(rawValue));
+      }
+    }
+    return builder;
+  }
+
+  const maybe = input as any;
+  const name = maybe?.var ?? maybe?.name;
+  if (name) {
+    builder.setVar(name.toString(), toStoredValue(maybe?.value));
+  }
+
+  return builder;
+}
+
 export function setPrefs(entries: Record<string, JsonValue> | string): JsonNode {
   const normalized: Record<string, JsonValue> = {};
 
