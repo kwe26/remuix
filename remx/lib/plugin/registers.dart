@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
-import 'package:remx/plugin/resolvers.dart';
+import './resolvers.dart';
 import 'dart:convert';
-import 'clicks.dart';
-import 'remui.dart';
+import './clicks.dart';
+import './remui.dart';
 
 part 'registers/tabs_radio.dart';
 part 'registers/buttons.dart';
@@ -722,6 +722,22 @@ final Map<String, Widget Function(Map<String, dynamic>)> registry = {
           : null,
     ),
     child: RemUI.buildWidget(j["child"]),
+  ),
+
+  "ListTile": (j) => ListTile(
+    leading: j["leading"] is Map<String, dynamic>
+        ? RemUI.buildWidget(j["leading"])
+        : null,
+    title: j["title"] is Map<String, dynamic>
+        ? RemUI.buildWidget(j["title"])
+        : (j["title"] != null ? Text(j["title"].toString()) : null),
+    subtitle: j["subtitle"] is Map<String, dynamic>
+        ? RemUI.buildWidget(j["subtitle"])
+        : (j["subtitle"] != null ? Text(j["subtitle"].toString()) : null),
+    trailing: j["trailing"] is Map<String, dynamic>
+        ? RemUI.buildWidget(j["trailing"])
+        : null,
+    onTap: () => handleClick(j),
   ),
 
   "SizedBox": (j) => SizedBox(
