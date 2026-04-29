@@ -201,6 +201,7 @@
       <a href="#initialization">Initialization</a>
       <a href="#widget-reference">Widget Reference</a>
       <a href="#variables">Variables</a>
+      <a href="#inline-actions">Inline Actions</a>
       <a href="#conditions">Conditions</a>
       <a href="#else-if">Else If Chains</a>
       <a href="#callbacks">Callbacks</a>
@@ -242,7 +243,7 @@
   icon: ui('Icon', { icon: 'open_in_new' }),
   onPressed: nav('/ui/dialogTest', 'dialog')
 });</code></pre>
-        <p>Use <code>navReplace</code> when you want to replace the current route (no back stack).</p>
+        <p>Use <code>navReplace</code> when you want the new route to fully replace the current stack. The Flutter runtime calls <code>pushAndRemoveUntil</code>, so back navigation is not possible after the replacement.</p>
 <pre><code>ui('IconButton', {
   icon: ui('Icon', { icon: 'home' }),
   onPressed: navReplace('/ui/main')
@@ -337,6 +338,84 @@
 callback
   .setVar('index', '1')
   .send();</code></pre>
+
+        <h3>Set a variable from a button tap</h3>
+        <p>Use <code>varSet()</code> to produce an inline action node that updates a runtime variable on the client without a server round-trip. Bind the result to <code>action</code>, <code>onPressed</code>, or <code>onTap</code>.</p>
+<pre><code>ui('FilledButton', {
+  action: varSet('index=1'),
+  child: ui('Text', { text: 'Go to second tab' })
+});
+
+// Object form when the value isn't a string
+ui('OutlinedButton', {
+  action: varSet({ var: 'rememberMe', value: true }),
+  child: ui('Text', { text: 'Remember me' })
+});</code></pre>
+        <p>The produced JSON shape is <code>{ "type": "setVar", "var": "index", "value": "1" }</code>. The Flutter runtime updates the variable, increments the reactive tick, and any <code>condition</code> / templated <code>Text</code> bound to that variable rebuilds immediately.</p>
+
+        <h3>Inline action object (no helper)</h3>
+        <p>If you prefer an explicit JSON object, you can write the same payload by hand. This is what the sidebar and bottom-nav demos use:</p>
+<pre><code>ui('Sidebar', {
+  variable: 'index',
+  items: [
+    {
+      icon: ui('Icon', { icon: 'home' }),
+      label: 'Form',
+      action: { type: 'setVar', var: 'index', value: '0' }
+    },
+    {
+      icon: ui('Icon', { icon: 'person' }),
+      label: 'Profile',
+      action: { type: 'setVar', var: 'index', value: '1' }
+    }
+  ]
+});</code></pre>
+      </section>
+
+      <section id="inline-actions">
+        <h2>Inline Actions</h2>
+        <p>Inline actions are JSON nodes that the client executes immediately on tap, without contacting the server. They&rsquo;re cheaper than a callback round-trip and are the right tool for local UI state changes (selected tab, active panel, theme toggle, locally-persisted preferences).</p>
+        <p>The available inline action types:</p>
+        <ul>
+          <li><code>{ type: 'setVar', var, value }</code> &mdash; update a runtime variable</li>
+          <li><code>{ type: 'setPrefs', entries: { ... } }</code> &mdash; write entries to <code>SharedPreferences</code> and sync the matching <code>prefs.*</code> runtime variables</li>
+          <li><code>{ type: 'nav', path, mode?, replace? }</code> &mdash; navigate to a new page or open a dialog</li>
+          <li><code>'nav:/some/path'</code> / <code>'navReplace:/some/path'</code> &mdash; shorthand string forms used by the <code>nav()</code> / <code>navReplace()</code> helpers</li>
+        </ul>
+
+        <h3>Persist preferences from a button tap</h3>
+        <p><code>setPrefs()</code> returns a <code>setPrefs</code> action node when used as an action prop. The client writes each entry to <code>SharedPreferences</code> and updates <code>prefs.&lt;key&gt;</code> / <code>prefs.&lt;key&gt;.isPresent</code> runtime vars so any bound UI reflects the change.</p>
+<pre><code>ui('FilledButton', {
+  action: setPrefs({ theme: 'dark', lang: 'en' }),
+  child: ui('Text', { text: 'Save preferences' })
+});
+
+// Querystring form
+ui('OutlinedButton', {
+  action: setPrefs('theme=dark&lang=en'),
+  child: ui('Text', { text: 'Save preferences' })
+});</code></pre>
+        <div class="note">An inline <code>setPrefs</code> action runs entirely on the client. It does not change the backend&rsquo;s <code>runtimeVars</code>; the next page load will still hydrate from the request body. If you need both a client-side write and a server-side acknowledgement, use the callback form instead (see <a href="#callbacks">Callbacks</a>).</div>
+
+        <h3>Navigate from a button tap</h3>
+<pre><code>// Push a new route on top of the current stack — back returns to the previous page.
+ui('IconButton', {
+  icon: ui('Icon', { icon: 'search' }),
+  onPressed: nav('/ui/search')
+});
+
+// Replace the entire stack — the new page becomes the only route, back navigation is impossible.
+ui('FilledButton', {
+  action: navReplace('/ui/main'),
+  child: ui('Text', { text: 'Sign in' })
+});
+
+// Open as a dialog overlay on top of the current page.
+ui('IconButton', {
+  icon: ui('Icon', { icon: 'open_in_new' }),
+  onPressed: nav('/ui/dialogTest', 'dialog')
+});</code></pre>
+        <p><code>navReplace</code> uses <code>pushAndRemoveUntil</code> internally so the entire route history is cleared. Use it for sign-in &rarr; home transitions or any flow where back navigation should not return to the prior screen.</p>
       </section>
 
       <section id="conditions">
@@ -391,6 +470,7 @@ callback
     .pushPageReplace('/ui/home')
     .send();
 });</code></pre>
+        <p><code>push</code> / <code>pushPage</code> add a new route on top of the current stack. <code>pushReplace</code> / <code>pushPageReplace</code> clear the entire stack so the new route becomes the only one &mdash; back navigation will not return to any prior route.</p>
         <h3>sendBack timeout payload builder</h3>
 <pre><code>const delayed = remui
   .sendBack()

@@ -622,7 +622,12 @@ class RemUI {
     if (history) {
       nav.push(MaterialPageRoute(builder: (_) => page));
     } else {
-      nav.pushReplacement(MaterialPageRoute(builder: (_) => page));
+      // Clear the entire stack so the new page is the only route — back navigation is not
+      // possible. pushReplacement only swaps the top route, leaving prior routes back-able.
+      nav.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => page),
+        (route) => false,
+      );
     }
   }
 
