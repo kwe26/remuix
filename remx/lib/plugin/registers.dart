@@ -22,7 +22,9 @@ class BoundTextField extends StatefulWidget {
 
 class _BoundTextFieldState extends State<BoundTextField> {
   late final TextEditingController _controller;
+  late final FocusNode _focusNode;
   String? _variableName;
+  VoidCallback? _varListener;
 
   @override
   void initState() {
@@ -34,6 +36,7 @@ class _BoundTextFieldState extends State<BoundTextField> {
     _controller = TextEditingController(
       text: initialValue ?? widget.json["text"]?.toString() ?? "",
     );
+    _focusNode = FocusNode();
 
     if (_variableName != null) {
       final existing = RemUI.getVar(_variableName!);
@@ -45,12 +48,27 @@ class _BoundTextFieldState extends State<BoundTextField> {
           }
         });
       }
+
+      _varListener = () {
+        if (!mounted || _variableName == null) return;
+        // Don't overwrite while the user is typing — would clobber input and reset cursor.
+        if (_focusNode.hasFocus) return;
+        final next = RemUI.getVar(_variableName!)?.toString() ?? '';
+        if (_controller.text != next) {
+          _controller.text = next;
+        }
+      };
+      RemUI.variableTick.addListener(_varListener!);
     }
   }
 
   @override
   void dispose() {
+    if (_varListener != null) {
+      RemUI.variableTick.removeListener(_varListener!);
+    }
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -74,6 +92,7 @@ class _BoundTextFieldState extends State<BoundTextField> {
   Widget build(BuildContext context) {
     final field = TextField(
       controller: _controller,
+      focusNode: _focusNode,
       obscureText: widget.json["obscureText"] == true,
       keyboardType: _keyboardType(widget.json["keyboardType"]),
       textInputAction: _textInputAction(widget.json["textInputAction"]),
@@ -1232,11 +1251,13 @@ final Map<String, Widget Function(Map<String, dynamic>)> registry = {
   "Image": (j) {
     final src = j["src"];
     if (src == null) return const SizedBox();
+    final width = (j["width"] as num?)?.toDouble();
+    final height = (j["height"] as num?)?.toDouble();
     if (src.startsWith("http")) {
       return Image.network(
         src,
-        width: j["width"].toDouble(),
-        height: j["height"].toDouble(),
+        width: width,
+        height: height,
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
           return const Center(child: CircularProgressIndicator());
@@ -1256,8 +1277,8 @@ final Map<String, Widget Function(Map<String, dynamic>)> registry = {
     } else {
       return Image.asset(
         src,
-        width: j["width"].toDouble(),
-        height: j["height"].toDouble(),
+        width: width,
+        height: height,
         color: Resolv.color(j["color"], context: RemUI.currentContext),
         scale: j["scale"] != null ? (j["scale"] as num).toDouble() : 1.0,
         fit: j["fit"] != null

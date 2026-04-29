@@ -821,11 +821,13 @@ class _ForeachWidget extends StatefulWidget {
 }
 
 class _ForeachWidgetState extends State<_ForeachWidget> {
-  late Future<List<Map<String, dynamic>>> _futureRows;
+  Future<List<Map<String, dynamic>>>? _futureRows;
+  String? _lastFetchKey;
 
   @override
   void initState() {
     super.initState();
+    _lastFetchKey = _computeFetchKey();
     _futureRows = _fetchRows();
   }
 
@@ -833,8 +835,40 @@ class _ForeachWidgetState extends State<_ForeachWidget> {
   void didUpdateWidget(covariant _ForeachWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.json != widget.json) {
+      _lastFetchKey = _computeFetchKey();
       _futureRows = _fetchRows();
     }
+  }
+
+  String _computeFetchKey() {
+    // Resolve templates against the current variable state so we re-fetch only when the
+    // effective request actually changes — not on every keystroke/var tick.
+    final url = _resolveForeachTemplateValue(
+      widget.json['url'],
+      const <String, dynamic>{},
+    );
+    final headers = _resolveForeachTemplateValue(
+      widget.json['headers'],
+      const <String, dynamic>{},
+    );
+    final body = _resolveForeachTemplateValue(
+      widget.json['body'],
+      const <String, dynamic>{},
+    );
+    final toForeach = _resolveForeachTemplateValue(
+      widget.json['toForeach'],
+      const <String, dynamic>{},
+    );
+    return jsonEncode([url, headers, body, toForeach]);
+  }
+
+  Future<List<Map<String, dynamic>>> _ensureFuture() {
+    final key = _computeFetchKey();
+    if (_futureRows == null || _lastFetchKey != key) {
+      _lastFetchKey = key;
+      _futureRows = _fetchRows();
+    }
+    return _futureRows!;
   }
 
   Future<List<Map<String, dynamic>>> _fetchRows() async {
@@ -993,7 +1027,7 @@ class _ForeachWidgetState extends State<_ForeachWidget> {
       valueListenable: RemUI.variableTick,
       builder: (context, _, __) {
         return FutureBuilder<List<Map<String, dynamic>>>(
-          future: _fetchRows(),
+          future: _ensureFuture(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return RemUI.buildWidget(loadingWidget);

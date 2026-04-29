@@ -55,6 +55,14 @@ Future<void> handleClick(Map<String, dynamic> json) async {
       return;
     }
 
+    if (normalized["type"] == "setPrefs") {
+      final entries = normalized["entries"];
+      if (entries is Map) {
+        await _setPrefs(entries);
+      }
+      return;
+    }
+
     if (normalized.containsKey("setVar")) {
       _applySetVar(normalized["setVar"]);
       if ((normalized["reloadRetain"] ?? normalized["loadRetain"]) == true) {

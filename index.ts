@@ -10,9 +10,10 @@ import {
     loadMaterialIcons,
     nav,
     remui,
-    setPrefs,
     setVar,
     ui,
+    sendUiResponse,
+    getPrefSyncCallbacks,
 } from './remui';
 import { initializeMaterialIcons, getAllIcons } from './remui_icons.ts';
 
@@ -409,11 +410,7 @@ app.all('/ui/main', (req, res) => {
         .meta('title', 'Main Page')
         .meta('description', 'RemUI playground main form');
 
-    res.json({
-        ...(screen as Record<string, JsonValue>),
-        callbacks,
-        vars: getRuntimeVars(),
-    });
+    sendUiResponse(res, screen, callbacks);
 });
 
 app.all('/ui/dialogTest', (req, res) => {
@@ -424,7 +421,6 @@ app.all('/ui/dialogTest', (req, res) => {
 
     setVar('dialogName', '');
     setVar('dialogEmail', '');
-    setPrefs({ dialogName: '', dialogEmail: '' });
 
     const dialogBody = ui('Padding', {
         padding: 8,
@@ -491,11 +487,7 @@ app.all('/ui/dialogTest', (req, res) => {
         .meta('title', 'Dialog Form')
         .meta('description', 'Overlay dialog form example');
 
-    res.json({
-        ...(dialog as Record<string, JsonValue>),
-        callbacks,
-        vars: getRuntimeVars(),
-    });
+    sendUiResponse(res, dialog, callbacks);
 });
 
 app.all('/ui/search', (req, res) => {
@@ -816,11 +808,7 @@ app.all('/ui/search', (req, res) => {
         .meta('title', 'Search')
         .meta('description', 'NavigationRail sample and widget discovery');
 
-    res.json({
-        ...(screen as Record<string, JsonValue>),
-        callbacks,
-        vars: getRuntimeVars(),
-    });
+    sendUiResponse(res, screen, callbacks);
 });
 
 app.all('/ui/remui', (req, res) => {
@@ -1119,11 +1107,7 @@ app.all('/ui/remui', (req, res) => {
         .meta('title', 'RemUI Components')
         .meta('description', 'RemNavbar, RemDropdowns, and RemBottomNavbar showcase');
 
-    res.json({
-        ...(screen as Record<string, JsonValue>),
-        callbacks,
-        vars: getRuntimeVars(),
-    });
+    sendUiResponse(res, screen, callbacks);
 });
 
 app.post('/ui/callbacks', (req, res) => {

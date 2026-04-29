@@ -1127,9 +1127,23 @@ function renderClientScript(): string {
           }
           if (cb.setSharedPref) {
             const next = readPrefs();
-            for (const part of String(cb.setSharedPref).split('&')) {
-              const sep = part.indexOf('=');
-              if (sep > 0) next[part.slice(0, sep)] = part.slice(sep + 1);
+            const sp = cb.setSharedPref;
+            if (sp && typeof sp === 'object' && typeof sp.name === 'string') {
+              next[sp.name] = sp.value ?? null;
+            } else {
+              for (const part of String(sp).split('&')) {
+                const sep = part.indexOf('=');
+                if (sep > 0) next[part.slice(0, sep)] = part.slice(sep + 1);
+              }
+            }
+            writePrefs(next);
+          }
+          if (cb.setPrefs) {
+            const next = readPrefs();
+            const entries = typeof cb.setPrefs === 'object' && cb.setPrefs !== null ? cb.setPrefs : {};
+            for (const [k, v] of Object.entries(entries)) {
+              if (v === null || v === undefined) delete next[k];
+              else next[k] = v;
             }
             writePrefs(next);
           }
@@ -1249,6 +1263,16 @@ function renderClientScript(): string {
         if (action && typeof action === 'object') {
           if (action.type === 'setVar' && action.var) {
             state[action.var] = action.value;
+            applyVars(state);
+            return;
+          }
+          if (action.type === 'setPrefs' && action.entries && typeof action.entries === 'object') {
+            const next = readPrefs();
+            for (const [k, v] of Object.entries(action.entries)) {
+              if (v === null || v === undefined) delete next[k];
+              else next[k] = v;
+            }
+            writePrefs(next);
             applyVars(state);
             return;
           }

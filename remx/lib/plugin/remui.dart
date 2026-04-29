@@ -102,17 +102,27 @@ class RemUI {
   }
 
   static void setVars(Map<String, dynamic> values) {
-    final current = Map<String, dynamic>.from(variables);
+    // Preserve local prefs.* vars not present in the server response — the route may not have
+    // re-hydrated all SharedPreferences, but the on-disk values are still authoritative.
+    final preserved = <String, dynamic>{};
+    for (final entry in variables.entries) {
+      if (entry.key.startsWith('prefs.') && !values.containsKey(entry.key)) {
+        preserved[entry.key] = entry.value;
+      }
+    }
+
+    final next = <String, dynamic>{...preserved, ...values};
+
     final noChange =
-        current.length == values.length &&
-        current.entries.every((entry) => values[entry.key] == entry.value);
+        variables.length == next.length &&
+        next.entries.every((entry) => variables[entry.key] == entry.value);
     if (noChange) {
       return;
     }
 
     variables
       ..clear()
-      ..addAll(values);
+      ..addAll(next);
     variableTick.value = variableTick.value + 1;
   }
 

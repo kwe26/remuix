@@ -631,28 +631,21 @@ export function setVar(name: unknown, value: unknown): JsonNode {
   };
 }
 
-export function varSet(input: string | { var?: string; value?: unknown } ): SendBackBuilder {
-  const builder = new SendBackBuilder();
-
+export function varSet(input: string | { var?: string; name?: string; value?: unknown }): JsonNode {
   if (typeof input === 'string') {
     const separator = input.indexOf('=');
     if (separator > 0) {
       const name = input.substring(0, separator).trim();
       const rawValue = input.substring(separator + 1);
       if (name) {
-        builder.setVar(name, toStoredValue(rawValue));
+        return { type: 'setVar', var: name, value: toStoredValue(rawValue) };
       }
     }
-    return builder;
+    return { type: 'setVar', var: input.trim(), value: null };
   }
 
-  const maybe = input as any;
-  const name = maybe?.var ?? maybe?.name;
-  if (name) {
-    builder.setVar(name.toString(), toStoredValue(maybe?.value));
-  }
-
-  return builder;
+  const name = (input.var ?? input.name ?? '').toString();
+  return { type: 'setVar', var: name, value: toStoredValue(input.value) };
 }
 
 export function setPrefs(entries: Record<string, JsonValue> | string): JsonNode {
@@ -902,6 +895,38 @@ export function navReplace(
     mode,
     replace: true,
   };
+}
+
+export function getPrefSyncCallbacks(): CallbackNode[] {
+  const callbacks: CallbackNode[] = [];
+  const allVars = getRuntimeVars();
+
+  for (const [key, value] of Object.entries(allVars)) {
+    if (key.startsWith('prefs.') && !key.endsWith('.isPresent')) {
+      const prefName = key.substring(6);
+      callbacks.push({
+        setSharedPref: {
+          name: prefName,
+          value: value,
+        },
+      });
+    }
+  }
+
+  return callbacks;
+}
+
+export function sendUiResponse(
+  res: Response,
+  screen: JsonNode,
+  callbacks: CallbackNode[] = [],
+): void {
+  const prefCallbacks = getPrefSyncCallbacks();
+  res.json({
+    ...(screen as Record<string, JsonValue>),
+    callbacks: [...callbacks, ...prefCallbacks],
+    vars: getRuntimeVars(),
+  });
 }
 
 export const remui = {
