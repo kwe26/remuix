@@ -384,7 +384,7 @@ ui('OutlinedButton', {
         </ul>
 
         <h3>Persist preferences from a button tap</h3>
-        <p><code>setPrefs()</code> returns a <code>setPrefs</code> action node when used as an action prop. The client writes each entry to <code>SharedPreferences</code> and updates <code>prefs.&lt;key&gt;</code> / <code>prefs.&lt;key&gt;.isPresent</code> runtime vars so any bound UI reflects the change.</p>
+        <p><code>setPrefs()</code> is a pure helper &mdash; it returns a <code>setPrefs</code> action node and does not touch the server&rsquo;s <code>runtimeVars</code>. When the user taps the button, the Flutter runtime writes each entry to <code>SharedPreferences</code> and also updates the matching <code>prefs.&lt;key&gt;</code> / <code>prefs.&lt;key&gt;.isPresent</code> runtime variables, so any bound UI (e.g. a <code>Text</code> with <code>{prefs.theme}</code>) reflects the change immediately.</p>
 <pre><code>ui('FilledButton', {
   action: setPrefs({ theme: 'dark', lang: 'en' }),
   child: ui('Text', { text: 'Save preferences' })
@@ -395,7 +395,7 @@ ui('OutlinedButton', {
   action: setPrefs('theme=dark&lang=en'),
   child: ui('Text', { text: 'Save preferences' })
 });</code></pre>
-        <div class="note">An inline <code>setPrefs</code> action runs entirely on the client. It does not change the backend&rsquo;s <code>runtimeVars</code>; the next page load will still hydrate from the request body. If you need both a client-side write and a server-side acknowledgement, use the callback form instead (see <a href="#callbacks">Callbacks</a>).</div>
+        <div class="note">Server-side persistence: <code>setPrefs()</code> has no server-side side effect &mdash; the page render only emits the action JSON; nothing is written until the button is tapped. If you need to persist a preference server-side (e.g. on form submit), use the callback form instead: <code>callback.setPrefs(...)</code> or <code>callback.setSharedPref(...)</code> &mdash; see <a href="#callbacks">Callbacks</a>.</div>
 
         <h3>Navigate from a button tap</h3>
 <pre><code>// Push a new route on top of the current stack — back returns to the previous page.

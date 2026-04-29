@@ -669,17 +669,6 @@ export function setPrefs(entries: Record<string, JsonValue> | string): JsonNode 
     }
   }
 
-  for (const [key, value] of Object.entries(normalized)) {
-    const stored = toStoredValue(value);
-    if (stored === null || stored === undefined) {
-      setRuntimeVar(`prefs.${key}`, null);
-      setRuntimeVar(`prefs.${key}.isPresent`, 'false');
-    } else {
-      setRuntimeVar(`prefs.${key}`, stored);
-      setRuntimeVar(`prefs.${key}.isPresent`, 'true');
-    }
-  }
-
   return {
     type: 'setPrefs',
     entries: normalized,

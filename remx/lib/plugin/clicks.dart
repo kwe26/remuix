@@ -238,6 +238,7 @@ Future<void> _setSharedPref(dynamic value) async {
     final rawValue = normalized["value"]?.toString();
     if (rawValue != null) {
       await prefs.setString(name, rawValue);
+      _syncPrefRuntimeVar(name, rawValue);
     }
     return;
   }
@@ -249,6 +250,7 @@ Future<void> _setSharedPref(dynamic value) async {
   if (entries.isNotEmpty) {
     for (final entry in entries.entries) {
       await prefs.setString(entry.key, entry.value);
+      _syncPrefRuntimeVar(entry.key, entry.value);
     }
     return;
   }
@@ -259,6 +261,14 @@ Future<void> _setSharedPref(dynamic value) async {
   final rawValue = text.substring(separator + 1);
   if (name.isEmpty) return;
   await prefs.setString(name, rawValue);
+  _syncPrefRuntimeVar(name, rawValue);
+}
+
+void _syncPrefRuntimeVar(String key, dynamic value) {
+  final name = key.trim();
+  if (name.isEmpty) return;
+  RemUI.setVar('prefs.$name', value);
+  RemUI.setVar('prefs.$name.isPresent', 'true');
 }
 
 Future<void> _setPrefs(dynamic value) async {
