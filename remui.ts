@@ -669,6 +669,17 @@ export function setPrefs(entries: Record<string, JsonValue> | string): JsonNode 
     }
   }
 
+  for (const [key, value] of Object.entries(normalized)) {
+    const stored = toStoredValue(value);
+    if (stored === null || stored === undefined) {
+      setRuntimeVar(`prefs.${key}`, null);
+      setRuntimeVar(`prefs.${key}.isPresent`, 'false');
+    } else {
+      setRuntimeVar(`prefs.${key}`, stored);
+      setRuntimeVar(`prefs.${key}.isPresent`, 'true');
+    }
+  }
+
   return {
     type: 'setPrefs',
     entries: normalized,
@@ -850,11 +861,7 @@ export function notFound() {
     });
 
     // Return 200 for /ui/* misses so Flutter can still render this schema page.
-    res.status(200).json({
-      ...(screen as Record<string, JsonValue>),
-      callbacks: [SnackBar(`404: ${path}`)],
-      vars: getRuntimeVars(),
-    });
+    sendUiResponse(res, screen, [SnackBar(`404: ${path}`)]);
   };
 }
 

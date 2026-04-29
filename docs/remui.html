@@ -383,8 +383,28 @@ ui('OutlinedButton', {
           <li><code>'nav:/some/path'</code> / <code>'navReplace:/some/path'</code> &mdash; shorthand string forms used by the <code>nav()</code> / <code>navReplace()</code> helpers</li>
         </ul>
 
+        <h3>Persist preferences from a route handler</h3>
+        <p>Calling <code>setPrefs()</code> inside a route handler writes each entry to the device&rsquo;s <code>SharedPreferences</code>. The mechanism: <code>setPrefs()</code> queues the writes, and <code>sendUiResponse()</code> emits a <code>setSharedPref</code> callback for each one. Flutter executes the callbacks when the response arrives, persisting every value on disk. The matching <code>prefs.&lt;key&gt;</code> / <code>prefs.&lt;key&gt;.isPresent</code> runtime variables are also set so the same request can read them back and any UI bound to <code>{prefs.&lt;key&gt;}</code> renders correctly on this page.</p>
+<pre><code>app.get('/ui/state/:stateid/cities', (req, res) =&gt; {
+  clearRuntimeVars();
+  hydrateRuntimeVarsFromContext(req.body);
+
+  // These writes are persisted to SharedPreferences on the device.
+  setPrefs({
+    selectedState: parseInt(req.params.stateid as string),
+    selectedStateName: req.params.stateName as string,
+    selectedCity: 0,
+    selectedCityName: 'None',
+  });
+
+  const screen = ui('Scaffold', { body: ... });
+  sendUiResponse(res, screen);
+});</code></pre>
+        <div class="note"><strong>Use <code>sendUiResponse(res, screen)</code></strong>, not <code>res.json(...)</code> directly. The auto-emitted <code>setSharedPref</code> callbacks are appended inside <code>sendUiResponse</code>; bypassing it means the device never receives the writes.</div>
+        <p>Setting an entry to <code>null</code> removes the key from <code>SharedPreferences</code> (a <code>remSharedPref</code> callback is emitted instead).</p>
+
         <h3>Persist preferences from a button tap</h3>
-        <p><code>setPrefs()</code> is a pure helper &mdash; it returns a <code>setPrefs</code> action node and does not touch the server&rsquo;s <code>runtimeVars</code>. When the user taps the button, the Flutter runtime writes each entry to <code>SharedPreferences</code> and also updates the matching <code>prefs.&lt;key&gt;</code> / <code>prefs.&lt;key&gt;.isPresent</code> runtime variables, so any bound UI (e.g. a <code>Text</code> with <code>{prefs.theme}</code>) reflects the change immediately.</p>
+        <p>You can also use <code>setPrefs()</code> as an inline button action. The returned JSON node is a <code>setPrefs</code> action; on tap, Flutter writes each entry to <code>SharedPreferences</code> and updates the matching <code>prefs.&lt;key&gt;</code> runtime variables.</p>
 <pre><code>ui('FilledButton', {
   action: setPrefs({ theme: 'dark', lang: 'en' }),
   child: ui('Text', { text: 'Save preferences' })
@@ -395,7 +415,7 @@ ui('OutlinedButton', {
   action: setPrefs('theme=dark&lang=en'),
   child: ui('Text', { text: 'Save preferences' })
 });</code></pre>
-        <div class="note">Server-side persistence: <code>setPrefs()</code> has no server-side side effect &mdash; the page render only emits the action JSON; nothing is written until the button is tapped. If you need to persist a preference server-side (e.g. on form submit), use the callback form instead: <code>callback.setPrefs(...)</code> or <code>callback.setSharedPref(...)</code> &mdash; see <a href="#callbacks">Callbacks</a>.</div>
+        <div class="note">When <code>setPrefs()</code> is called while building a button schema, the server-side write also fires immediately (because the helper executes during render). If you only want the write to happen on click, build the action JSON directly: <code>{ type: 'setPrefs', entries: { ... } }</code>.</div>
 
         <h3>Navigate from a button tap</h3>
 <pre><code>// Push a new route on top of the current stack — back returns to the previous page.
