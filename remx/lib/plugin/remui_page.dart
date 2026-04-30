@@ -176,11 +176,7 @@ class _RemUIPageState extends State<RemUIPage> {
               body: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const CircularProgressIndicator(),
-                    const SizedBox(height: 16),
-                    const Text('Loading UI...'),
-                  ],
+                  children: [const CircularProgressIndicator()],
                 ),
               ),
               floatingActionButton: kDebugMode
