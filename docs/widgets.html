@@ -791,13 +791,16 @@ ui('foreach', {
       </section>
 
       <section id="checkbox">
-        <h2>Checkbox</h2>
-        <p>Boolean input widget bound to a runtime variable. Supports compact inline mode or full tile mode.</p>
+        <h2>Checkbox / CheckBox</h2>
+        <p>Boolean input widget bound to a runtime variable, or list-membership toggle via <code>append</code>. Supports compact inline mode or full tile mode.</p>
         <table>
           <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
           <tr><td><code>variable</code></td><td>string</td><td>Bound variable key.</td></tr>
-          <tr><td><code>label</code></td><td>string</td><td>Main label text.</td></tr>
+          <tr><td><code>append</code></td><td>string</td><td>List variable to append/remove <code>value</code> from.</td></tr>
+          <tr><td><code>label</code> / <code>labe</code></td><td>string</td><td>Main label text.</td></tr>
           <tr><td><code>subtitle</code></td><td>string</td><td>Optional helper text (tile mode).</td></tr>
+          <tr><td><code>value</code></td><td>any</td><td>Value stored in the append list when checked.</td></tr>
+          <tr><td><code>checked</code></td><td>boolean</td><td>Fallback checked state when no bound list value exists.</td></tr>
           <tr><td><code>tile</code></td><td>boolean</td><td>When true, renders <code>CheckboxListTile</code>.</td></tr>
           <tr><td><code>activeColor</code></td><td>string</td><td>Active check color.</td></tr>
         </table>
@@ -807,6 +810,15 @@ ui('foreach', {
   subtitle: 'Stores your session preferences',
   tile: true
 });</code></pre>
+<pre><code>ui('CheckBox', {
+  append: 'selectedCities',
+  value: { cityId: 12, cityName: 'WorldHello?' },
+  checked: false,
+  label: 'WorldHello?',
+  tile: true,
+  action: { action: 'submit', id: '#cb1001' }
+});</code></pre>
+        <p>In append mode the checkbox reads from and writes to the list stored in <code>append</code>. That list is part of the runtime variables, so any submit action will include the updated array and any route response can persist it with <code>setPrefs()</code> or a normal callback payload.</p>
       </section>
 
       <section id="slider">

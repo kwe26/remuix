@@ -219,63 +219,8 @@ class _TimeoutRunnerState extends State<_TimeoutRunner> {
 
 final Map<String, Widget Function(Map<String, dynamic>)>
 _controlWidgetsRegistry = {
-  "Checkbox": (j) => ValueListenableBuilder<int>(
-    valueListenable: RemUI.variableTick,
-    builder: (context, _, __) {
-      final variableName = j["variable"]?.toString().trim();
-      final fromVar = variableName != null && variableName.isNotEmpty
-          ? RemUI.getVar(variableName)
-          : null;
-      final checked = fromVar is bool
-          ? fromVar
-          : (fromVar?.toString().toLowerCase() == 'true');
-      final activeColor = Resolv.color(
-        j["activeColor"],
-        context: RemUI.currentContext,
-      );
-      final title = j["label"]?.toString();
-      final subtitle = j["subtitle"]?.toString();
-
-      Future<void> update(bool? value) async {
-        final next = value == true;
-        if (variableName != null && variableName.isNotEmpty) {
-          RemUI.setVar(variableName, next);
-        }
-
-        final hasAction =
-            j["action"] != null ||
-            j["onClick"] != null ||
-            j["onPressed"] != null;
-        if (hasAction) {
-          await handleClick(j);
-        }
-      }
-
-      if (j["tile"] == false) {
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Checkbox(
-              value: checked,
-              onChanged: update,
-              activeColor: activeColor,
-              tristate: j["tristate"] == true,
-            ),
-            if (title != null) Text(title),
-          ],
-        );
-      }
-
-      return CheckboxListTile(
-        value: checked,
-        onChanged: update,
-        activeColor: activeColor,
-        tristate: j["tristate"] == true,
-        title: title != null ? Text(title) : null,
-        subtitle: subtitle != null ? Text(subtitle) : null,
-      );
-    },
-  ),
+  "Checkbox": (j) => _buildCheckboxControl(j),
+  "CheckBox": (j) => _buildCheckboxControl(j),
 
   "Slider": (j) => ValueListenableBuilder<int>(
     valueListenable: RemUI.variableTick,
@@ -348,3 +293,188 @@ _controlWidgetsRegistry = {
 
   "Timeout": (j) => _TimeoutRunner(json: j),
 };
+
+Widget _buildCheckboxControl(Map<String, dynamic> j) {
+  return ValueListenableBuilder<int>(
+    valueListenable: RemUI.variableTick,
+    builder: (context, _, __) {
+      final variableName = j["variable"]?.toString().trim();
+      final appendName = j["append"]?.toString().trim();
+      final value = _resolveCheckboxValue(j);
+      final fromVar = variableName != null && variableName.isNotEmpty
+          ? RemUI.getVar(variableName)
+          : null;
+      final appendVar = appendName != null && appendName.isNotEmpty
+          ? RemUI.getVar(appendName)
+          : null;
+      final checked = _resolveCheckboxChecked(
+        j,
+        fromVar: fromVar,
+        appendVar: appendVar,
+        value: value,
+      );
+      final activeColor = Resolv.color(
+        j["activeColor"],
+        context: RemUI.currentContext,
+      );
+      final title = (j["label"] ?? j["labe"] ?? j["title"])?.toString();
+      final subtitle = j["subtitle"]?.toString();
+
+      Future<void> update(bool? nextValue) async {
+        final next = nextValue == true;
+
+        if (appendName != null && appendName.isNotEmpty) {
+          _updateAppendedListVar(appendName, value, next);
+        }
+
+        if (variableName != null && variableName.isNotEmpty) {
+          RemUI.setVar(variableName, next);
+        }
+
+        final hasAction =
+            j["action"] != null ||
+            j["onClick"] != null ||
+            j["onPressed"] != null;
+        if (hasAction) {
+          await handleClick(j);
+        }
+      }
+
+      final leading = j["leading"];
+      final trailing = j["trailing"];
+      final text = title != null ? Text(title) : null;
+
+      if (j["tile"] == false) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Checkbox(
+              value: checked,
+              onChanged: update,
+              activeColor: activeColor,
+              tristate: j["tristate"] == true,
+            ),
+            if (leading is Map<String, dynamic>) ...[
+              RemUI.buildWidget(leading),
+              const SizedBox(width: 8),
+            ],
+            if (text != null) text,
+            if (trailing is Map<String, dynamic>) ...[
+              const SizedBox(width: 8),
+              RemUI.buildWidget(trailing),
+            ],
+          ],
+        );
+      }
+
+      return CheckboxListTile(
+        value: checked,
+        onChanged: update,
+        activeColor: activeColor,
+        tristate: j["tristate"] == true,
+        title: text,
+        subtitle: subtitle != null ? Text(subtitle) : null,
+        secondary: leading is Map<String, dynamic>
+            ? RemUI.buildWidget(leading)
+            : null,
+      );
+    },
+  );
+}
+
+dynamic _resolveCheckboxValue(Map<String, dynamic> j) {
+  if (j.containsKey("value")) {
+    return j["value"];
+  }
+  if (j.containsKey("checkedValue")) {
+    return j["checkedValue"];
+  }
+  return true;
+}
+
+bool _resolveCheckboxChecked(
+  Map<String, dynamic> j, {
+  dynamic fromVar,
+  dynamic appendVar,
+  dynamic value,
+}) {
+  if (j["append"] != null) {
+    final list = _coerceList(appendVar);
+    if (list != null) {
+      return _containsValue(list, value);
+    }
+
+    final checked = j["checked"];
+    if (checked is bool) {
+      return checked;
+    }
+    if (checked is String) {
+      return checked.toLowerCase() == 'true';
+    }
+    return false;
+  }
+
+  if (fromVar is bool) {
+    return fromVar;
+  }
+
+  if (fromVar != null) {
+    return fromVar.toString().toLowerCase() == 'true';
+  }
+
+  final checked = j["checked"];
+  if (checked is bool) {
+    return checked;
+  }
+  if (checked is String) {
+    return checked.toLowerCase() == 'true';
+  }
+
+  return false;
+}
+
+List<dynamic>? _coerceList(dynamic value) {
+  if (value is List) {
+    return value;
+  }
+
+  if (value is String) {
+    final text = value.trim();
+    if (text.isEmpty) return <dynamic>[];
+    if (text.startsWith('[') && text.endsWith(']')) {
+      try {
+        final decoded = jsonDecode(text);
+        if (decoded is List) {
+          return decoded;
+        }
+      } catch (_) {}
+    }
+    return <dynamic>[];
+  }
+
+  return null;
+}
+
+String _checkboxToken(dynamic value) {
+  if (value == null) return 'null';
+  if (value is Map || value is List) {
+    return jsonEncode(value);
+  }
+  return value.toString();
+}
+
+bool _containsValue(List<dynamic> list, dynamic value) {
+  final needle = _checkboxToken(value);
+  return list.any((item) => _checkboxToken(item) == needle);
+}
+
+void _updateAppendedListVar(String variableName, dynamic value, bool checked) {
+  final current = _coerceList(RemUI.getVar(variableName)) ?? <dynamic>[];
+  final next = List<dynamic>.from(current);
+  final token = _checkboxToken(value);
+  next.removeWhere((item) => _checkboxToken(item) == token);
+  if (checked) {
+    next.add(value);
+  }
+  RemUI.setVar(variableName, next);
+}

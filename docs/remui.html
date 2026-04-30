@@ -585,6 +585,7 @@ const body = ui('SidebarWithUI', {
       <section id="controls">
         <h2>Controls</h2>
         <p>The Flutter widget registry is now split into smaller files under <code>remx/lib/plugin/registers/</code>. Widgets like <code>Tabs</code>, <code>Radio</code>, <code>Checkbox</code>, <code>Slider</code>, <code>DatePicker</code>, and <code>Timeout</code> live there so the registry can grow without staying monolithic.</p>
+        <p><code>Checkbox</code> now supports both boolean binding and list-append mode via <code>append</code>. Use <code>CheckBox</code> as an alias if you prefer that casing; when appended values change, the runtime list updates immediately and can be submitted or persisted like any other variable.</p>
         <p>See the widget reference for field-by-field schema details and examples.</p>
       </section>
 

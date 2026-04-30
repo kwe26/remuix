@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
 import './resolvers.dart';
 import 'dart:convert';
+import 'dart:async';
 import './clicks.dart';
 import './remui.dart';
 
@@ -157,6 +158,190 @@ class _BoundTextFieldState extends State<BoundTextField> {
         return TextInputAction.send;
       default:
         return TextInputAction.done;
+    }
+  }
+}
+
+class _CarouselWidget extends StatefulWidget {
+  final Map<String, dynamic> json;
+
+  const _CarouselWidget({super.key, required this.json});
+
+  @override
+  State<_CarouselWidget> createState() => _CarouselWidgetState();
+}
+
+class _CarouselWidgetState extends State<_CarouselWidget>
+    with TickerProviderStateMixin {
+  late PageController _pageController;
+  int _currentIndex = 0;
+  late Timer? _autoPlayTimer;
+  late AnimationController _dotAnimationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: _currentIndex);
+    _dotAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _startAutoPlay();
+  }
+
+  @override
+  void dispose() {
+    _stopAutoPlay();
+    _pageController.dispose();
+    _dotAnimationController.dispose();
+    super.dispose();
+  }
+
+  void _startAutoPlay() {
+    final autoPlay = widget.json["autoPlay"] == true;
+    if (!autoPlay) return;
+
+    final items = (widget.json["items"] as List? ?? [])
+        .whereType<Map<String, dynamic>>()
+        .toList();
+    if (items.length <= 1) return;
+
+    final durationMs =
+        (widget.json["autoPlayInterval"] as num?)?.toInt() ?? 3000;
+    _autoPlayTimer = Timer.periodic(Duration(milliseconds: durationMs), (_) {
+      if (mounted && _pageController.hasClients) {
+        final nextPage = (_currentIndex + 1) % items.length;
+        _pageController.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  void _stopAutoPlay() {
+    _autoPlayTimer?.cancel();
+    _autoPlayTimer = null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final items = (widget.json["items"] as List? ?? [])
+        .whereType<Map<String, dynamic>>()
+        .toList();
+
+    if (items.isEmpty) {
+      return const Center(child: Text('No carousel items'));
+    }
+
+    final width = (widget.json["width"] as num?)?.toDouble();
+    final height = (widget.json["height"] as num?)?.toDouble() ?? 300;
+    final showIndicators = widget.json["showIndicators"] != false;
+    final indicatorPosition =
+        widget.json["indicatorPosition"]?.toString() ?? 'bottom';
+
+    final carousel = GestureDetector(
+      onTap: () {
+        if (items[_currentIndex].containsKey("action") ||
+            items[_currentIndex].containsKey("onPressed") ||
+            items[_currentIndex].containsKey("onClick")) {
+          handleClick(items[_currentIndex]);
+        }
+      },
+      child: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() => _currentIndex = index);
+          _dotAnimationController.forward(from: 0.0);
+        },
+        children: items.map((item) {
+          return GestureDetector(
+            onTap: () => handleClick(item),
+            child: RemUI.buildWidget(item),
+          );
+        }).toList(),
+      ),
+    );
+
+    if (!showIndicators) {
+      return SizedBox(width: width, height: height, child: carousel);
+    }
+
+    final indicatorColor =
+        Resolv.color(
+          widget.json["indicatorColor"],
+          context: RemUI.currentContext,
+        ) ??
+        const Color(0xFF0D47A1);
+    final indicatorInactiveColor =
+        Resolv.color(
+          widget.json["indicatorInactiveColor"],
+          context: RemUI.currentContext,
+        ) ??
+        const Color(0x80BDBDBD);
+    final indicatorSize =
+        (widget.json["indicatorSize"] as num?)?.toDouble() ?? 8;
+    final indicatorSpacing =
+        (widget.json["indicatorSpacing"] as num?)?.toDouble() ?? 8;
+
+    final indicators = Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(items.length, (index) {
+        final isActive = index == _currentIndex;
+        return GestureDetector(
+          onTap: () => _pageController.animateToPage(
+            index,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          ),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            margin: EdgeInsets.symmetric(horizontal: indicatorSpacing / 2),
+            width: isActive ? indicatorSize * 2 : indicatorSize,
+            height: indicatorSize,
+            decoration: BoxDecoration(
+              color: isActive ? indicatorColor : indicatorInactiveColor,
+              borderRadius: BorderRadius.circular(indicatorSize),
+            ),
+          ),
+        );
+      }),
+    );
+
+    final body = SizedBox(width: width, height: height, child: carousel);
+
+    if (indicatorPosition == 'top') {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: indicators,
+          ),
+          body,
+        ],
+      );
+    } else if (indicatorPosition == 'overlay') {
+      return Stack(
+        children: [
+          body,
+          Positioned(
+            bottom: 16,
+            left: 0,
+            right: 0,
+            child: Center(child: indicators),
+          ),
+        ],
+      );
+    } else {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          body,
+          Padding(padding: const EdgeInsets.only(top: 12), child: indicators),
+        ],
+      );
     }
   }
 }
@@ -690,24 +875,7 @@ final Map<String, Widget Function(Map<String, dynamic>)> registry = {
         .toList(),
   ),
 
-  "Carousel": (j) {
-    final items = (j["items"] as List? ?? [])
-        .whereType<Map<String, dynamic>>()
-        .toList();
-
-    var autoPlay = j["autoPlay"] == true;
-    if (autoPlay && items.length <= 1) {
-      autoPlay = false;
-    }
-
-    return SizedBox(
-      width: j["width"] != null ? (j["width"] as num).toDouble() : null,
-      height: j["height"] != null ? (j["height"] as num).toDouble() : null,
-      child: PageView(
-        children: items.map((item) => RemUI.buildWidget(item)).toList(),
-      ),
-    );
-  },
+  "Carousel": (j) => _CarouselWidget(json: j),
 
   "GestureDetector": (j) => GestureDetector(
     onTap: () => handleClick(j),
