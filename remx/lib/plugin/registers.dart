@@ -764,6 +764,119 @@ final Map<String, Widget Function(Map<String, dynamic>)> registry = {
         .toList(),
   ),
 
+  "KiwiPlusMinus": (j) => ValueListenableBuilder<int>(
+    valueListenable: RemUI.variableTick,
+    builder: (context, _, __) {
+      final variableName = j["variable"]?.toString().trim();
+      final min = (j["min"] as num?)?.toDouble();
+      final max = (j["max"] as num?)?.toDouble();
+      final step = (j["step"] as num?)?.toDouble() ?? 1.0;
+      final fromVar = variableName != null && variableName.isNotEmpty
+          ? RemUI.getVar(variableName)
+          : null;
+
+      double current;
+      if (fromVar is num) {
+        current = fromVar.toDouble();
+      } else {
+        current =
+            double.tryParse(fromVar?.toString() ?? '') ??
+            (j["value"] is num ? (j["value"] as num).toDouble() : 0.0);
+      }
+
+      Color? minusColor = Resolv.color(
+        j["colorMinus"] ?? j["minusColor"],
+        context: RemUI.currentContext,
+      );
+      Color? plusColor = Resolv.color(
+        j["colorPlus"] ?? j["plusColor"],
+        context: RemUI.currentContext,
+      );
+
+      void applyNew(double nextVal) {
+        var out;
+        // prefer integer when inputs are whole numbers
+        if (nextVal == nextVal.roundToDouble()) {
+          out = nextVal.toInt();
+        } else {
+          out = nextVal;
+        }
+        if (variableName != null && variableName.isNotEmpty) {
+          RemUI.setVar(variableName, out);
+        }
+
+        if (j["onChange"] != null) {
+          handleClick({"action": j["onChange"]});
+        } else if (j["action"] != null ||
+            j["onClick"] != null ||
+            j["onPressed"] != null) {
+          handleClick(j);
+        }
+      }
+
+      final canDec = min == null ? true : current - step >= min - 1e-9;
+      final canInc = max == null ? true : current + step <= max + 1e-9;
+
+      final minusBtn = InkWell(
+        onTap: canDec
+            ? () => applyNew(
+                (current - step).clamp(
+                  min ?? double.negativeInfinity,
+                  max ?? double.infinity,
+                ),
+              )
+            : null,
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: minusColor ?? Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(Icons.remove, color: Colors.white),
+        ),
+      );
+
+      final plusBtn = InkWell(
+        onTap: canInc
+            ? () => applyNew(
+                (current + step).clamp(
+                  min ?? double.negativeInfinity,
+                  max ?? double.infinity,
+                ),
+              )
+            : null,
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: plusColor ?? Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(Icons.add, color: Colors.white),
+        ),
+      );
+
+      final display = Text(
+        (current == current.roundToDouble())
+            ? current.toInt().toString()
+            : current.toString(),
+        style: TextStyle(fontSize: (j["fontSize"] as num?)?.toDouble() ?? 16),
+      );
+
+      final spacing = (j["spacing"] as num?)?.toDouble() ?? 12.0;
+
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          minusBtn,
+          SizedBox(width: spacing),
+          display,
+          SizedBox(width: spacing),
+          plusBtn,
+        ],
+      );
+    },
+  ),
+
   "SingleChildScrollView": (j) =>
       SingleChildScrollView(child: RemUI.buildWidget(j["child"])),
   "Scaffold": (j) => Scaffold(

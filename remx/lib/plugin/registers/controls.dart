@@ -39,8 +39,8 @@ class _DatePickerFieldState extends State<_DatePickerField> {
       selectedDate = await showDatePicker(
         context: context,
         initialDate: now,
-        firstDate: DateTime(1900),
-        lastDate: DateTime(2200),
+        firstDate: DateTime.now(),
+        lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
       );
 
       if (selectedDate == null) {

@@ -842,6 +842,36 @@ ui('foreach', {
 });</code></pre>
       </section>
 
+      <section id="kiwiplusminus">
+        <h2>KiwiPlusMinus</h2>
+        <p>Compact plus/minus counter bound to a numeric runtime variable. Use it for quantity selectors, rating adjustments, or any small numeric controls.</p>
+        <table>
+          <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+          <tr><td><code>variable</code></td><td>string</td><td>Runtime variable name to read/write the current numeric value.</td></tr>
+          <tr><td><code>min</code></td><td>number</td><td>Minimum allowed value (optional).</td></tr>
+          <tr><td><code>max</code></td><td>number</td><td>Maximum allowed value (optional).</td></tr>
+          <tr><td><code>step</code></td><td>number</td><td>Amount to increment/decrement per tap. Defaults to 1.</td></tr>
+          <tr><td><code>value</code></td><td>number</td><td>Fallback initial value when variable is not present.</td></tr>
+          <tr><td><code>colorMinus</code> / <code>minusColor</code></td><td>string</td><td>Background color for the minus button.</td></tr>
+          <tr><td><code>colorPlus</code> / <code>plusColor</code></td><td>string</td><td>Background color for the plus button.</td></tr>
+          <tr><td><code>spacing</code></td><td>number</td><td>Horizontal spacing between buttons and display. Defaults to 12.</td></tr>
+          <tr><td><code>fontSize</code></td><td>number</td><td>Font size for the numeric display.</td></tr>
+          <tr><td><code>onChange</code></td><td>string | object</td><td>Callback id or inline action executed after the value changes. Standard <code>action</code>/<code>onClick</code> keys are also supported.</td></tr>
+        </table>
+<pre><code>ui('KiwiPlusMinus', {
+  variable: 'qty',
+  min: 0,
+  max: 10,
+  step: 1,
+  colorMinus: '#D32F2F',
+  colorPlus: '#388E3C',
+  spacing: 8,
+  fontSize: 18,
+  onChange: 'qtyChanged' // or an inline action object
+});</code></pre>
+        <p>Behavior: taps update the runtime variable via <code>RemUI.setVar()</code>, clamp values to <code>min</code>/<code>max</code>, and preserve integer types when possible. Use <code>onChange</code> or a normal <code>action</code> to run additional callbacks after updates.</p>
+      </section>
+
       <section id="datepicker">
         <h2>DatePicker</h2>
         <p>Date/time selection input with supported modes: <code>date-only</code>, <code>time-only</code>, and <code>both</code>.</p>
