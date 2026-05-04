@@ -801,8 +801,86 @@ final Map<String, Widget Function(Map<String, dynamic>)> registry = {
         } else {
           out = nextVal;
         }
+
         if (variableName != null && variableName.isNotEmpty) {
-          RemUI.setVar(variableName, out);
+          // support dotted paths (e.g., "test.var") where the root may be a
+          // Map or a JSON-encoded string. In that case, update the nested
+          // property and write back the root variable preserving its original
+          // string/map shape.
+          if (variableName.contains('.')) {
+            final parts = variableName.split('.');
+            final root = parts.first;
+            final path = parts.sublist(1);
+            dynamic rootVal = RemUI.getVar(root);
+            bool wasString = false;
+            Map<String, dynamic> targetMap = {};
+
+            if (rootVal is String) {
+              try {
+                final decoded = jsonDecode(rootVal);
+                if (decoded is Map) {
+                  targetMap = Map<String, dynamic>.from(decoded);
+                } else {
+                  // non-object JSON, fallback to empty map
+                  targetMap = {};
+                }
+              } catch (_) {
+                // not JSON, start fresh
+                targetMap = {};
+              }
+              wasString = true;
+            } else if (rootVal is Map) {
+              targetMap = Map<String, dynamic>.from(rootVal);
+            } else if (rootVal == null) {
+              targetMap = {};
+            } else {
+              // unsupported root type, overwrite with map
+              targetMap = {};
+            }
+
+            // walk path and set value
+            Map<String, dynamic> cursor = targetMap;
+            for (var i = 0; i < path.length; i++) {
+              final key = path[i];
+              final isLast = i == path.length - 1;
+              if (isLast) {
+                cursor[key] = out;
+              } else {
+                final next = cursor[key];
+                if (next is Map) {
+                  cursor = next as Map<String, dynamic>;
+                } else if (next is String) {
+                  try {
+                    final decoded = jsonDecode(next);
+                    if (decoded is Map) {
+                      cursor[key] = Map<String, dynamic>.from(decoded);
+                      cursor = cursor[key] as Map<String, dynamic>;
+                    } else {
+                      final newMap = <String, dynamic>{};
+                      cursor[key] = newMap;
+                      cursor = newMap;
+                    }
+                  } catch (_) {
+                    final newMap = <String, dynamic>{};
+                    cursor[key] = newMap;
+                    cursor = newMap;
+                  }
+                } else {
+                  final newMap = <String, dynamic>{};
+                  cursor[key] = newMap;
+                  cursor = newMap;
+                }
+              }
+            }
+
+            if (wasString) {
+              RemUI.setVar(root, jsonEncode(targetMap));
+            } else {
+              RemUI.setVar(root, targetMap);
+            }
+          } else {
+            RemUI.setVar(variableName, out);
+          }
         }
 
         if (j["onChange"] != null) {
