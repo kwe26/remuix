@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:http/http.dart' as http;
@@ -8,6 +9,8 @@ import 'remui_page.dart';
 
 typedef PageHandler = void Function(void Function(String action), String url);
 typedef WidgetBuilderMap = Map<String, Widget Function(Map<String, dynamic>)>;
+typedef PaymentGatewayHandler =
+    FutureOr<void> Function(Map<String, dynamic> action);
 
 class RemUI {
   static String _baseUrl = "";
@@ -15,6 +18,9 @@ class RemUI {
   static Map<String, PageHandler> _pageHandlers = {};
   static WidgetBuilderMap _customRegisters = {};
   static WidgetBuilderMap _customPages = {};
+  static Map<String, PaymentGatewayHandler> _paymentGateways = {};
+  static String? _pendingPaymentCallback;
+  static Map<String, dynamic>? _pendingPaymentAction;
   static final Map<String, dynamic> variables = {};
   static List<dynamic> callbacks = [];
   static List<dynamic> pendingCallbacks = [];
@@ -35,6 +41,7 @@ class RemUI {
     WidgetBuilderMap? registers,
     WidgetBuilderMap? pages,
     Map<String, PageHandler>? pageFunction,
+    Map<String, PaymentGatewayHandler>? paymentGateways,
   }) {
     _baseUrl = baseUrl;
     _config = config;
@@ -46,6 +53,121 @@ class RemUI {
     }
     if (pageFunction != null) {
       _pageHandlers = pageFunction;
+    }
+    if (paymentGateways != null) {
+      _paymentGateways = paymentGateways;
+    }
+  }
+
+  static Future<void> startPayment(Map<String, dynamic> action) async {
+    final gateway =
+        action["gateway"]?.toString().trim() ??
+        action["provider"]?.toString().trim() ??
+        "";
+    final callbackPath = action["callback"]?.toString().trim() ?? "";
+    if (gateway.isEmpty) {
+      _showSnackBar("Missing payment gateway in action payload.");
+      return;
+    }
+
+    final handler = _paymentGateways[gateway];
+    if (handler == null) {
+      _showSnackBar("Payment gateway '$gateway' is not registered.");
+      return;
+    }
+
+    if (callbackPath.isNotEmpty) {
+      _pendingPaymentCallback = callbackPath;
+    }
+    _pendingPaymentAction = Map<String, dynamic>.from(action);
+
+    await Future.sync(() => handler(Map<String, dynamic>.from(action)));
+  }
+
+  static Future<void> paymentCallback(
+    dynamic data, {
+    String? callback,
+    String? gateway,
+    Map<String, dynamic>? extra,
+  }) async {
+    final callbackPath = callback?.trim().isNotEmpty == true
+        ? callback!.trim()
+        : (_pendingPaymentCallback ?? "");
+
+    if (callbackPath.isEmpty) {
+      _showSnackBar("Missing payment callback path.");
+      return;
+    }
+
+    final resolvedGateway = gateway?.trim().isNotEmpty == true
+        ? gateway!.trim()
+        : _pendingPaymentAction?["gateway"]?.toString();
+
+    beginProgress();
+    try {
+      final response = await http.post(
+        Uri.parse("$_baseUrl$callbackPath"),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "User-Agent": "RemUI-Flutter/1.0",
+        },
+        body: jsonEncode({
+          "action": "payment",
+          "gateway": resolvedGateway,
+          "data": data,
+          "request": _pendingPaymentAction?["data"],
+          "payment": _pendingPaymentAction,
+          "variables": variables,
+          "callbacks": callbacks,
+          "extra": extra ?? {},
+        }),
+      );
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        _showSnackBar("Payment callback failed (${response.statusCode}).");
+        return;
+      }
+
+      final decoded = jsonDecode(response.body);
+      if (decoded is! Map) {
+        return;
+      }
+
+      final normalized = decoded.map(
+        (key, value) => MapEntry(key.toString(), value),
+      );
+
+      final vars = normalized["vars"];
+      if (vars is Map) {
+        setVars(vars.map((key, value) => MapEntry(key.toString(), value)));
+      }
+
+      final payloadCallbacks = normalized["callbacks"];
+      if (payloadCallbacks is List) {
+        await runCallbacks(payloadCallbacks);
+      } else {
+        final looksLikeSingleCallback =
+            normalized.containsKey("setVar") ||
+            normalized.containsKey("setSharedPref") ||
+            normalized.containsKey("setPrefs") ||
+            normalized.containsKey("snackbar") ||
+            normalized.containsKey("nav") ||
+            normalized.containsKey("navReplace") ||
+            normalized.containsKey("push") ||
+            normalized.containsKey("pushReplace") ||
+            normalized.containsKey("pushPage") ||
+            normalized.containsKey("pushPageReplace");
+        if (looksLikeSingleCallback) {
+          await runCallbacks([normalized]);
+        }
+      }
+    } catch (e) {
+      _showSnackBar("Payment callback error: $e");
+    } finally {
+      endProgress();
+      _pendingPaymentCallback = null;
+      _pendingPaymentAction = null;
     }
   }
 

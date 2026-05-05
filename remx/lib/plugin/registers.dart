@@ -771,9 +771,42 @@ final Map<String, Widget Function(Map<String, dynamic>)> registry = {
       final min = (j["min"] as num?)?.toDouble();
       final max = (j["max"] as num?)?.toDouble();
       final step = (j["step"] as num?)?.toDouble() ?? 1.0;
-      final fromVar = variableName != null && variableName.isNotEmpty
-          ? RemUI.getVar(variableName)
-          : null;
+      dynamic fromVar;
+      if (variableName != null && variableName.isNotEmpty) {
+        if (!variableName.contains('.')) {
+          fromVar = RemUI.getVar(variableName);
+        } else {
+          final parts = variableName
+              .split('.')
+              .where((part) => part.trim().isNotEmpty)
+              .toList();
+          if (parts.isNotEmpty) {
+            final root = parts.first;
+            final path = parts.sublist(1).join('.');
+            dynamic rootVal = RemUI.getVar(root);
+
+            if (rootVal is String) {
+              try {
+                final decoded = jsonDecode(rootVal);
+                rootVal = decoded;
+              } catch (_) {
+                rootVal = null;
+              }
+            }
+
+            fromVar = path.isEmpty ? rootVal : _valueAtPath(rootVal, path);
+
+            if (fromVar is String) {
+              final text = fromVar.trim();
+              if (text.startsWith('{') || text.startsWith('[')) {
+                try {
+                  fromVar = jsonDecode(text);
+                } catch (_) {}
+              }
+            }
+          }
+        }
+      }
 
       double current;
       if (fromVar is num) {

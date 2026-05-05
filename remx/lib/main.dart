@@ -329,6 +329,18 @@ void main() {
   RemUI.init(
     "http://localhost:3000",
     {"mediaQuery": true},
+    paymentGateways: {
+      "razorpay": (j) async {
+        // Integrate Razorpay SDK here, then send result to the backend callback path.
+        await RemUI.paymentCallback({
+          "status": "success",
+          "gateway": "razorpay",
+          "amount": j["data"]?["amount"],
+          "note": j["data"]?["note"],
+          "request": j["data"],
+        });
+      },
+    },
     pageFunction: {
       ".main": (onClick, url) {
         if (url == "/next") {

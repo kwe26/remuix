@@ -47,6 +47,11 @@ Future<void> handleClick(Map<String, dynamic> json) async {
       return;
     }
 
+    if (normalized["type"] == "payment" || normalized["type"] == "paym") {
+      await RemUI.startPayment(normalized);
+      return;
+    }
+
     if (normalized["type"] == "setVar") {
       _applySetVar(normalized);
       if ((normalized["reloadRetain"] ?? normalized["loadRetain"]) == true) {

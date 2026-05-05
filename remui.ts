@@ -893,6 +893,19 @@ export function navReplace(
   };
 }
 
+export function paym(
+  gateway: string,
+  callback: string,
+  data: Record<string, JsonValue> = {},
+): JsonNode {
+  return {
+    type: 'payment',
+    gateway,
+    callback,
+    data,
+  };
+}
+
 export function getPrefSyncCallbacks(): CallbackNode[] {
   const callbacks: CallbackNode[] = [];
   const allVars = getRuntimeVars();

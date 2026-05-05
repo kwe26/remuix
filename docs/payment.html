@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RemUI Payment Guide</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --ink: #0f172a;
+      --muted: #475569;
+      --line: #dbe2ea;
+      --brand: #0d47a1;
+      --brand-2: #0f766e;
+      --code: #0f172a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, #edf4ff 0%, #f8fafc 100%);
+      line-height: 1.55;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
+      color: #fff;
+      padding: 28px 20px;
+    }
+
+    .shell {
+      max-width: 1140px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .shell img {
+      width: 70px;
+      height: 70px;
+      border-radius: 16px;
+      object-fit: cover;
+      border: 2px solid rgba(255,255,255,.35);
+      box-shadow: 0 14px 30px rgba(0,0,0,.18);
+    }
+
+    .shell h1 { margin: 0 0 6px; font-size: 1.85rem; }
+    .shell p { margin: 0; opacity: .96; }
+
+    .layout {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: minmax(230px, 280px) minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    nav, section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+
+    nav {
+      position: sticky;
+      top: 18px;
+      height: fit-content;
+      padding: 15px;
+    }
+
+    nav a {
+      display: block;
+      text-decoration: none;
+      color: var(--brand);
+      margin: 6px 0;
+    }
+
+    section {
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+
+    h2 { margin-top: 0; color: var(--brand-2); }
+    p { color: var(--muted); }
+
+    pre, code {
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    pre {
+      margin: 8px 0 0;
+      background: var(--code);
+      color: #e2e8f0;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #1e293b;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      table-layout: fixed;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      vertical-align: top;
+      text-align: left;
+      word-break: break-word;
+    }
+
+    th { background: #eef2ff; }
+
+    .note {
+      border-left: 4px solid var(--brand-2);
+      padding: 10px 12px;
+      background: #ecfeff;
+      color: #164e63;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      nav { position: static; }
+      .shell { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell">
+      <img src="logo.jpg" alt="RemUI logo" />
+      <div>
+        <h1>Payment Integration Guide</h1>
+        <p>Dart gateway handlers + server callback routes with paym(method, callback, data) flow.</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav>
+      <strong>Sections</strong>
+      <a href="#flow">Flow</a>
+      <a href="#client-init">Dart Init</a>
+      <a href="#client-click">Server onClick</a>
+      <a href="#razorpay">Razorpay Example</a>
+      <a href="#stripe">Stripe Example</a>
+      <a href="#paypal">PayPal Example</a>
+      <a href="#generic-callback">Generic Callback Route</a>
+      <a href="#tips">Tips</a>
+    </nav>
+
+    <main>
+      <section id="flow">
+        <h2>Flow</h2>
+        <p>RemUI payment flow has three steps:</p>
+        <table>
+          <tr><th>Step</th><th>What happens</th></tr>
+          <tr><td>1</td><td>UI sends <code>onClick: paym("gateway", "/ui/payment/confirm", {...})</code>.</td></tr>
+          <tr><td>2</td><td>Dart click handler routes this to the registered gateway in <code>RemUI.init(...paymentGateways)</code>.</td></tr>
+          <tr><td>3</td><td>Gateway result calls <code>await RemUI.paymentCallback({...})</code>; RemUI posts to callback path from <code>paym(...)</code>.</td></tr>
+        </table>
+      </section>
+
+      <section id="client-init">
+        <h2>Dart Init: Register Gateways</h2>
+<pre><code>RemUI.init(
+  "http://localhost:3000",
+  {"mediaQuery": true},
+  paymentGateways: {
+    "razorpay": (j) async {
+      // Launch SDK checkout here, then send final result.
+      await RemUI.paymentCallback({
+        "status": "success",
+        "gateway": "razorpay",
+        "paymentId": "pay_123",
+        "orderId": "order_123",
+        "amount": j["data"]?["amount"],
+        "note": j["data"]?["note"],
+      });
+    },
+    "stripe": (j) async {
+      // Open Stripe sheet or hosted page.
+      await RemUI.paymentCallback({
+        "status": "success",
+        "gateway": "stripe",
+        "intentId": "pi_123",
+        "amount": j["data"]?["amount"],
+      });
+    },
+    "paypal": (j) async {
+      // Open PayPal approval flow.
+      await RemUI.paymentCallback({
+        "status": "success",
+        "gateway": "paypal",
+        "captureId": "CAPTURE_123",
+        "amount": j["data"]?["amount"],
+      });
+    }
+  }
+);</code></pre>
+        <div class="note">Use the same key names in <code>paymentGateways</code> as in <code>paym("method", ...)</code>.</div>
+      </section>
+
+      <section id="client-click">
+        <h2>Server Side: onClick with paym(...)</h2>
+<pre><code>import { ui, paym } from "../../../import";
+
+const checkoutButton = ui("ElevatedButton", {
+  child: ui("Text", { text: "Pay Now" }),
+  onPressed: paym("razorpay", "/ui/payment/confirm", {
+    amount: 19900,
+    currency: "INR",
+    note: "Booking #A1003",
+    bookingId: 1003,
+    customerId: 77
+  })
+});</code></pre>
+      </section>
+
+      <section id="razorpay">
+        <h2>Gateway Example: Razorpay</h2>
+        <p>Typical payload fields sent from UI to gateway handler, then back to callback route:</p>
+<pre><code>// paym payload (request side)
+{
+  "type": "payment",
+  "gateway": "razorpay",
+  "callback": "/ui/payment/confirm",
+  "data": {
+    "amount": 19900,
+    "currency": "INR",
+    "note": "Booking #A1003",
+    "bookingId": 1003
+  }
+}
+
+// paymentCallback payload (result side)
+{
+  "status": "success",
+  "gateway": "razorpay",
+  "paymentId": "pay_xxx",
+  "orderId": "order_xxx",
+  "signature": "sig_xxx"
+}</code></pre>
+      </section>
+
+      <section id="stripe">
+        <h2>Gateway Example: Stripe</h2>
+<pre><code>onPressed: paym("stripe", "/ui/payment/confirm", {
+  amount: 3499,
+  currency: "USD",
+  orderRef: "SO-44321"
+});</code></pre>
+<pre><code>// In stripe gateway handler, after payment succeeds:
+await RemUI.paymentCallback({
+  "status": "success",
+  "gateway": "stripe",
+  "intentId": "pi_abc",
+  "paymentMethod": "pm_card_visa"
+});</code></pre>
+      </section>
+
+      <section id="paypal">
+        <h2>Gateway Example: PayPal</h2>
+<pre><code>onPressed: paym("paypal", "/ui/payment/confirm", {
+  amount: 59,
+  currency: "USD",
+  invoiceId: "INV-2026-0007"
+});</code></pre>
+<pre><code>await RemUI.paymentCallback({
+  "status": "success",
+  "gateway": "paypal",
+  "captureId": "CAPTURE_77",
+  "payerId": "PAYER_22"
+});</code></pre>
+      </section>
+
+      <section id="generic-callback">
+        <h2>Generic Callback Route (Express + Prisma)</h2>
+<pre><code>import type { PrismaClient } from "@prisma/client";
+import type { Request, Response } from "express";
+import { sendBack, navReplace, SnackBar } from "../../../import";
+
+export default {
+  path: "/ui/payment/confirm",
+  method: "POST",
+  auth: "none",
+  run: async (req: Request, res: Response, prisma: PrismaClient) => {
+    const body = req.body ?? {};
+    const gateway = String(body.gateway ?? "");
+    const payment = body.data ?? {};
+    const requestData = body.request ?? {};
+
+    const status = String(payment.status ?? "failed").toLowerCase();
+    const bookingId = Number(requestData.bookingId ?? 0);
+
+    if (status !== "success") {
+      sendBack(res, [
+        SnackBar("Payment failed. Please try again."),
+      ]);
+      return;
+    }
+
+    // Save payment in DB (simplified)
+    await prisma.payments.create({
+      data: {
+        bookingId,
+        gateway,
+        amount: Number(requestData.amount ?? 0),
+        reference: String(payment.paymentId ?? payment.intentId ?? payment.captureId ?? ""),
+        rawJson: JSON.stringify(body),
+      },
+    });
+
+    sendBack(res, [
+      SnackBar("Payment successful"),
+      navReplace(`/ui/booking/success/${bookingId}`),
+    ]);
+  },
+};</code></pre>
+      </section>
+
+      <section id="tips">
+        <h2>Tips</h2>
+        <ul>
+          <li>Always validate payment signatures/tokens server-side before marking success.</li>
+          <li>Treat amount and currency from the server as authoritative.</li>
+          <li>Use idempotency keys for callback routes to prevent duplicate payment records.</li>
+          <li>If payment is canceled, still call <code>RemUI.paymentCallback({...})</code> with failure status for consistent flow.</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
