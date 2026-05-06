@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import 'registers.dart';
 import 'remui_page.dart';
 
@@ -353,6 +354,12 @@ class RemUI {
       _showSnackBar(callback["snackbar"]?.toString() ?? "");
     }
 
+    if (callback.containsKey("webView")) {
+      await _openWebView(callback["webView"]);
+    } else if (callback.containsKey("openWebView")) {
+      await _openWebView(callback["openWebView"]);
+    }
+
     if (callback.containsKey("pushReplace")) {
       await _handleNavigationCallback(callback["pushReplace"], replace: true);
     } else if (callback.containsKey("push")) {
@@ -467,6 +474,49 @@ class RemUI {
     }
 
     await _setSharedPref(value);
+  }
+
+  static Future<void> _openWebView(dynamic value) async {
+    if (value is! Map) {
+      return;
+    }
+
+    final normalized = value.map(
+      (key, value) => MapEntry(key.toString(), value),
+    );
+    final rawUrl = normalized["url"]?.toString().trim() ?? "";
+    if (rawUrl.isEmpty) {
+      _showSnackBar("Missing webview url.");
+      return;
+    }
+
+    final fullscreen = normalized["fullscreen"] == true;
+    final remuiContains = normalized["remuiContains"]?.toString().trim() ?? "";
+    final matches = normalized["matches"] is List
+        ? List<Map<String, dynamic>>.from(
+            (normalized["matches"] as List).whereType<Map>().map(
+              (entry) =>
+                  entry.map((key, value) => MapEntry(key.toString(), value)),
+            ),
+          )
+        : <Map<String, dynamic>>[];
+
+    final navContext = navigatorKey.currentContext ?? currentContext;
+    if (navContext == null) {
+      return;
+    }
+
+    await showDialog<void>(
+      context: navContext,
+      barrierDismissible: true,
+      useSafeArea: false,
+      builder: (_) => _WebViewCallbackDialog(
+        initialUrl: rawUrl,
+        fullscreen: fullscreen,
+        matches: matches,
+        remuiContains: remuiContains,
+      ),
+    );
   }
 
   static Future<void> _handleNavigationCallback(
@@ -782,6 +832,7 @@ class RemUI {
     }
 
     final nav = navigatorKey.currentState;
+
     if (nav == null || !nav.canPop()) {
       return;
     }
@@ -791,6 +842,184 @@ class RemUI {
 
   static void reloadRetain() {
     reloadRetainTick.value = reloadRetainTick.value + 1;
+  }
+}
+
+class _WebViewCallbackDialog extends StatefulWidget {
+  final String initialUrl;
+  final bool fullscreen;
+  final List<Map<String, dynamic>> matches;
+  final String remuiContains;
+
+  const _WebViewCallbackDialog({
+    required this.initialUrl,
+    required this.fullscreen,
+    required this.matches,
+    required this.remuiContains,
+  });
+
+  @override
+  State<_WebViewCallbackDialog> createState() => _WebViewCallbackDialogState();
+}
+
+class _WebViewCallbackDialogState extends State<_WebViewCallbackDialog> {
+  late final WebViewController _controller;
+  bool _handledMatch = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onNavigationRequest: (request) {
+            _handleUrl(request.url);
+            return NavigationDecision.navigate;
+          },
+          onPageFinished: (url) {
+            _handleUrl(url);
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(widget.initialUrl));
+  }
+
+  void _handleUrl(String url) {
+    if (_handledMatch) {
+      return;
+    }
+
+    if (!_matches(url)) {
+      return;
+    }
+
+    _handledMatch = true;
+    final nextPath = _buildRemuiTarget(url);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      Navigator.of(context, rootNavigator: true).pop();
+      if (nextPath.isNotEmpty) {
+        RemUI.changePage(nextPath, history: false);
+      }
+    });
+  }
+
+  bool _matches(String url) {
+    if (widget.matches.isEmpty) {
+      return false;
+    }
+
+    for (final match in widget.matches) {
+      final needle = match["value"]?.toString() ?? "";
+      if (needle.isEmpty) {
+        continue;
+      }
+
+      final mode = match["mode"]?.toString() ?? "contains";
+      switch (mode) {
+        case "exact":
+          if (url == needle) return true;
+          break;
+        case "startsWith":
+          if (url.startsWith(needle)) return true;
+          break;
+        default:
+          if (url.contains(needle)) return true;
+          break;
+      }
+    }
+
+    return false;
+  }
+
+  String _buildRemuiTarget(String matchedUrl) {
+    final basePath = widget.remuiContains.trim();
+    if (basePath.isEmpty) {
+      return "";
+    }
+
+    final fromValue = _decodePossibleBase64Url(matchedUrl);
+    final parsed = Uri.parse(basePath);
+    final query = Map<String, String>.from(parsed.queryParameters);
+    query["from"] = fromValue;
+    return parsed.replace(queryParameters: query).toString();
+  }
+
+  String _decodePossibleBase64Url(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return trimmed;
+    }
+
+    final fromQuery = Uri.tryParse(trimmed)?.queryParameters["from"];
+    final candidate = fromQuery ?? trimmed;
+    try {
+      final normalized = base64.normalize(candidate);
+      final decoded = utf8.decode(base64.decode(normalized));
+      if (decoded.isNotEmpty) {
+        return decoded;
+      }
+    } catch (_) {}
+
+    return candidate;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final body = WebViewWidget(controller: _controller);
+
+    if (widget.fullscreen) {
+      return Dialog.fullscreen(
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Web View'),
+            leading: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+            ),
+          ),
+          body: body,
+        ),
+      );
+    }
+
+    return Dialog(
+      insetPadding: const EdgeInsets.all(16),
+      child: SizedBox(
+        width: 960,
+        height: 720,
+        child: Column(
+          children: [
+            Material(
+              color: Theme.of(context).colorScheme.surface,
+              child: Row(
+                children: [
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Web View',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () =>
+                        Navigator.of(context, rootNavigator: true).pop(),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(child: body),
+          ],
+        ),
+      ),
+    );
   }
 }
 

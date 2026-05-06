@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RemUI WebView Callback Guide</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --ink: #0f172a;
+      --muted: #475569;
+      --line: #dbe2ea;
+      --brand: #0d47a1;
+      --brand-2: #0f766e;
+      --code: #0f172a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, #edf4ff 0%, #f8fafc 100%);
+      line-height: 1.55;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
+      color: #fff;
+      padding: 28px 20px;
+    }
+
+    .shell {
+      max-width: 1160px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .shell img {
+      width: 70px;
+      height: 70px;
+      border-radius: 16px;
+      object-fit: cover;
+      border: 2px solid rgba(255,255,255,.35);
+      box-shadow: 0 14px 30px rgba(0,0,0,.18);
+    }
+
+    .shell h1 { margin: 0 0 6px; font-size: 1.85rem; }
+    .shell p { margin: 0; opacity: .96; }
+
+    .layout {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: minmax(230px, 280px) minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    nav, section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+
+    nav {
+      position: sticky;
+      top: 18px;
+      height: fit-content;
+      padding: 15px;
+    }
+
+    nav a {
+      display: block;
+      text-decoration: none;
+      color: var(--brand);
+      margin: 6px 0;
+    }
+
+    section {
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+
+    h2 { margin-top: 0; color: var(--brand-2); }
+    p, li { color: var(--muted); }
+
+    pre, code {
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    pre {
+      margin: 8px 0 0;
+      background: var(--code);
+      color: #e2e8f0;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #1e293b;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      table-layout: fixed;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      vertical-align: top;
+      text-align: left;
+      word-break: break-word;
+    }
+
+    th { background: #eef2ff; }
+
+    .note {
+      border-left: 4px solid var(--brand-2);
+      padding: 10px 12px;
+      background: #ecfeff;
+      color: #164e63;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #ecfeff;
+      color: #155e75;
+      font-size: .82rem;
+    }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      nav { position: static; }
+      .shell { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell">
+      <img src="logo.jpg" alt="RemUI logo" />
+      <div>
+        <h1>WebView Callback Guide</h1>
+        <p>Open a webview from a callback, watch URL changes, and redirect back into RemUI when a match occurs.</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav>
+      <strong>Sections</strong>
+      <a href="#overview">Overview</a>
+      <a href="#builder">Builder API</a>
+      <a href="#match-modes">Match Modes</a>
+      <a href="#remui-target">RemUI Redirect</a>
+      <a href="#server">Server Usage</a>
+      <a href="#flutter">Flutter Setup</a>
+      <a href="#flow">Execution Flow</a>
+      <a href="#examples">Examples</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+
+    <main>
+      <section id="overview">
+        <h2>Overview</h2>
+        <p><code>WebViewCb()</code> creates a callback payload that opens an in-app webview. It is designed for flows where a third-party page eventually redirects to a known URL, and that URL should hand control back to RemUI.</p>
+        <div class="pill-row">
+          <span class="pill">In-app webview</span>
+          <span class="pill">URL match</span>
+          <span class="pill">RemUI redirect</span>
+          <span class="pill">Back-to-main behavior</span>
+        </div>
+        <div class="note">This is a callback feature, not a standard widget. You attach it with <code>callback.addWebView(webView)</code> or <code>sendBack().addWebView(webView)</code>.</div>
+      </section>
+
+      <section id="builder">
+        <h2>Builder API</h2>
+<pre><code>const webView = WebViewCb()
+  .url('https://checkout.example.com/start')
+  .fullscreen()
+  .match('example.com', 'contains')
+  .remuiContains('/ui/payment/confirm');</code></pre>
+        <table>
+          <tr><th>Method</th><th>Meaning</th></tr>
+          <tr><td><code>.url(value)</code></td><td>Initial URL loaded into the webview.</td></tr>
+          <tr><td><code>.fullscreen(true)</code></td><td>Opens the webview full screen. If omitted, a centered dialog is used.</td></tr>
+          <tr><td><code>.match(value, mode)</code></td><td>Adds a URL matcher. Multiple matches are allowed.</td></tr>
+          <tr><td><code>.remuiContains(path)</code></td><td>RemUI route to open once a match is detected.</td></tr>
+          <tr><td><code>.addWebView(webView)</code></td><td>Adds the webview callback to a callback builder.</td></tr>
+        </table>
+        <p>The full callback payload is serialized as JSON and executed on the Flutter side.</p>
+      </section>
+
+      <section id="match-modes">
+        <h2>Match Modes</h2>
+        <p><code>.match()</code> supports three modes.</p>
+        <table>
+          <tr><th>Mode</th><th>Behavior</th><th>Example</th></tr>
+          <tr><td><code>contains</code></td><td>Matches when the current URL contains the provided string.</td><td><code>match('example.com', 'contains')</code></td></tr>
+          <tr><td><code>exact</code></td><td>Matches only when the URL is exactly equal to the provided string.</td><td><code>match('https://example.com/done', 'exact')</code></td></tr>
+          <tr><td><code>startsWith</code></td><td>Matches when the URL starts with the provided string.</td><td><code>match('https://example.com/return', 'startsWith')</code></td></tr>
+        </table>
+        <div class="note">You can add multiple <code>.match()</code> calls. The first one that matches wins.</div>
+      </section>
+
+      <section id="remui-target">
+        <h2>RemUI Redirect</h2>
+        <p>When a match fires, the webview closes and RemUI opens the route supplied by <code>.remuiContains()</code> using replace-style navigation.</p>
+<pre><code>WebViewCb()
+  .url('https://payments.example.com/start')
+  .match('payments.example.com/success', 'contains')
+  .remuiContains('/ui/payment/confirm');</code></pre>
+        <p>The Flutter runtime opens <code>/ui/payment/confirm?from=&lt;decoded-value&gt;</code>. If the matched URL already contains a <code>from</code> query parameter, that value is decoded and forwarded. Otherwise the matched URL itself is decoded and used as the <code>from</code> value.</p>
+        <div class="note">The opened RemUI page behaves like a replacement page. Pressing back returns to <code>/ui/main</code>.</div>
+      </section>
+
+      <section id="server">
+        <h2>Server Usage</h2>
+        <p>Attach the webview payload to any callback builder. The recommended pattern is to send it from a callback response, then let the client open the webview immediately.</p>
+<pre><code>app.post('/ui/start-payment', (req, res) =&gt; {
+  const callback = ui.getCallback(req, res, '#cb1001');
+
+  const webView = WebViewCb()
+    .url('https://checkout.example.com/start?order=ABC123')
+    .fullscreen()
+    .match('checkout.example.com/complete', 'contains')
+    .remuiContains('/ui/payment/confirm');
+
+  callback
+    .addWebView(webView)
+    .send();
+});</code></pre>
+        <p>You can also combine the webview payload with other callbacks. For example, close dialogs, set variables, or persist preferences after the webview returns.</p>
+<pre><code>callback
+  .addWebView(webView)
+  .setVar('paymentStatus', 'pending')
+  .setSharedPref('lastPaymentGateway=webview')
+  .send();</code></pre>
+      </section>
+
+      <section id="flutter">
+        <h2>Flutter Setup</h2>
+        <p>The Flutter side already understands the callback payload and opens the webview using <code>webview_flutter</code>.</p>
+<pre><code>RemUI.init(
+  'http://localhost:3000',
+  {'mediaQuery': true},
+  paymentGateways: {
+    'razorpay': (j) async {
+      await RemUI.paymentCallback({
+        'status': 'success',
+        'gateway': 'razorpay',
+        'paymentId': 'pay_123',
+      });
+    },
+  },
+);</code></pre>
+        <p>For the webview flow specifically, the runtime watches the URL. When it matches, it closes the webview and opens the RemUI target page.</p>
+      </section>
+
+      <section id="flow">
+        <h2>Execution Flow</h2>
+        <table>
+          <tr><th>Step</th><th>What happens</th></tr>
+          <tr><td>1</td><td>Backend sends a callback with <code>webView</code> payload.</td></tr>
+          <tr><td>2</td><td>Flutter opens the webview, either fullscreen or dialog mode.</td></tr>
+          <tr><td>3</td><td>User completes the external flow and the URL changes.</td></tr>
+          <tr><td>4</td><td>The runtime checks each <code>.match()</code> rule against the current URL.</td></tr>
+          <tr><td>5</td><td>On match, the webview closes and RemUI opens the configured route with <code>?from=...</code>.</td></tr>
+          <tr><td>6</td><td>Back from that RemUI page returns to <code>/ui/main</code>.</td></tr>
+        </table>
+      </section>
+
+      <section id="examples">
+        <h2>Examples</h2>
+        <h3>Checkout flow</h3>
+<pre><code>const webView = WebViewCb()
+  .url('https://checkout.stripe.com/pay/cs_test_123')
+  .fullscreen()
+  .match('checkout.stripe.com', 'contains')
+  .remuiContains('/ui/payment/confirm');
+
+callback.addWebView(webView);</code></pre>
+
+        <h3>Approval flow with exact match</h3>
+<pre><code>const webView = WebViewCb()
+  .url('https://accounts.example.com/approve')
+  .match('https://accounts.example.com/success', 'exact')
+  .remuiContains('/ui/accounts/success');</code></pre>
+
+        <h3>Multiple match rules</h3>
+<pre><code>const webView = WebViewCb()
+  .url('https://example.com/login')
+  .match('example.com/return', 'contains')
+  .match('example.com/complete', 'startsWith')
+  .remuiContains('/ui/complete');</code></pre>
+      </section>
+
+      <section id="faq">
+        <h2>FAQ</h2>
+        <h3>Does this open a new browser tab?</h3>
+        <p>No. It opens inside the Flutter app using the in-app webview.</p>
+
+        <h3>What does <code>from</code> contain?</h3>
+        <p>The matched URL, decoded from base64 when applicable. If the URL already includes a <code>from</code> parameter, that value is preferred.</p>
+
+        <h3>Why does back return to <code>/ui/main</code>?</h3>
+        <p>The RemUI page opened from the webview is marked as a replace-style route with a <code>from</code> marker. The page intercepts back navigation and sends the user home.</p>
+
+        <h3>Can I use it outside payments?</h3>
+        <p>Yes. Any external flow that ends in a predictable return URL can use the same callback payload.</p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

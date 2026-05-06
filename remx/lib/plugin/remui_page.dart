@@ -15,11 +15,14 @@ class _RemUIPageState extends State<RemUIPage> {
   String? _errorMessage;
   bool _showError = false;
   bool _callbacksHandled = false;
+  late final bool _returnToMainOnBack;
   late final VoidCallback _reloadRetainListener;
 
   @override
   void initState() {
     super.initState();
+    _returnToMainOnBack =
+        Uri.tryParse(widget.path)?.queryParameters['from'] != null;
     _reloadRetainListener = () {
       if (!mounted) {
         return;
@@ -119,118 +122,131 @@ class _RemUIPageState extends State<RemUIPage> {
   Widget build(BuildContext context) {
     RemUI.updateContext(context);
 
-    // Show error dialog if there's an error
-    if (_showError && _errorMessage != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _showErrorDialog();
+    return WillPopScope(
+      onWillPop: () async {
+        if (_returnToMainOnBack) {
+          RemUI.changePage('/ui/main', history: false);
+          return false;
         }
-      });
-    }
+        return true;
+      },
+      child: Builder(
+        builder: (context) {
+          // Show error dialog if there's an error
+          if (_showError && _errorMessage != null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                _showErrorDialog();
+              }
+            });
+          }
 
-    return FutureBuilder<Widget>(
-      future: _page,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return _withProgressOverlay(
-            Scaffold(
-              body: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+          return FutureBuilder<Widget>(
+            future: _page,
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return _withProgressOverlay(
+                  Scaffold(
+                    body: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            size: 64,
+                            color: Colors.red,
+                          ),
+                          const SizedBox(height: 16),
+                          const Text('Failed to load UI'),
+                          const SizedBox(height: 8),
+                          SelectableText(
+                            snapshot.error.toString(),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton(
+                            onPressed: _loadPage,
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    floatingActionButton: kDebugMode
+                        ? FloatingActionButton(
+                            mini: true,
+                            onPressed: _loadPage,
+                            tooltip: 'Refresh UI',
+                            child: const Icon(Icons.refresh),
+                          )
+                        : null,
+                  ),
+                );
+              }
+
+              if (!snapshot.hasData) {
+                return _withProgressOverlay(
+                  Scaffold(
+                    body: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [const CircularProgressIndicator()],
+                      ),
+                    ),
+                    floatingActionButton: kDebugMode
+                        ? FloatingActionButton(
+                            mini: true,
+                            onPressed: _loadPage,
+                            tooltip: 'Refresh UI',
+                            child: const Icon(Icons.refresh),
+                          )
+                        : null,
+                  ),
+                );
+              }
+
+              if (!_callbacksHandled) {
+                _callbacksHandled = true;
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  RemUI.runPendingCallbacks();
+                });
+              }
+
+              return _withProgressOverlay(
+                Stack(
                   children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Colors.red,
-                    ),
-                    const SizedBox(height: 16),
-                    const Text('Failed to load UI'),
-                    const SizedBox(height: 8),
-                    SelectableText(
-                      snapshot.error.toString(),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: _loadPage,
-                      child: const Text('Retry'),
-                    ),
+                    snapshot.data!,
+                    if (kDebugMode)
+                      Positioned(
+                        bottom: 16,
+                        right: 16,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            FloatingActionButton(
+                              mini: true,
+                              heroTag: 'remui-debug',
+                              onPressed: RemUI.openDebugTool,
+                              tooltip: 'Open RemUI Debug Tool',
+                              child: const Icon(Icons.bug_report),
+                            ),
+                            const SizedBox(height: 12),
+                            FloatingActionButton(
+                              mini: true,
+                              heroTag: 'remui-refresh',
+                              onPressed: _loadPage,
+                              tooltip: 'Refresh UI',
+                              child: const Icon(Icons.refresh),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
                 ),
-              ),
-              floatingActionButton: kDebugMode
-                  ? FloatingActionButton(
-                      mini: true,
-                      onPressed: _loadPage,
-                      tooltip: 'Refresh UI',
-                      child: const Icon(Icons.refresh),
-                    )
-                  : null,
-            ),
+              );
+            },
           );
-        }
-
-        if (!snapshot.hasData) {
-          return _withProgressOverlay(
-            Scaffold(
-              body: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [const CircularProgressIndicator()],
-                ),
-              ),
-              floatingActionButton: kDebugMode
-                  ? FloatingActionButton(
-                      mini: true,
-                      onPressed: _loadPage,
-                      tooltip: 'Refresh UI',
-                      child: const Icon(Icons.refresh),
-                    )
-                  : null,
-            ),
-          );
-        }
-
-        if (!_callbacksHandled) {
-          _callbacksHandled = true;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            RemUI.runPendingCallbacks();
-          });
-        }
-
-        return _withProgressOverlay(
-          Stack(
-            children: [
-              snapshot.data!,
-              if (kDebugMode)
-                Positioned(
-                  bottom: 16,
-                  right: 16,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      FloatingActionButton(
-                        mini: true,
-                        heroTag: 'remui-debug',
-                        onPressed: RemUI.openDebugTool,
-                        tooltip: 'Open RemUI Debug Tool',
-                        child: const Icon(Icons.bug_report),
-                      ),
-                      const SizedBox(height: 12),
-                      FloatingActionButton(
-                        mini: true,
-                        heroTag: 'remui-refresh',
-                        onPressed: _loadPage,
-                        tooltip: 'Refresh UI',
-                        child: const Icon(Icons.refresh),
-                      ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-        );
-      },
+        },
+      ),
     );
   }
 }

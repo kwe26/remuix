@@ -211,6 +211,7 @@
       <a href="#controls">Controls</a>
       <a href="#prefs">Preference Conditions</a>
       <a href="#exceptional">Exceptional Widgets</a>
+      <a href="#webview">WebView Callback</a>
       <a href="#files">File Layout</a>
     </nav>
 
@@ -646,6 +647,21 @@ const body = ui('SidebarWithUI', {
             Root-level callbacks are executed after the page loads, not during widget build.
           </div>
         </div>
+      </section>
+
+      <section id="webview">
+        <h2>WebView Callback</h2>
+        <p>Use <code>WebViewCb()</code> when the flow needs an in-app webview that returns to a RemUI route after a URL match. The callback builder is designed for payment checkout, OAuth-like approval flows, or any external browser handoff that must return to the app.</p>
+        <p>The complete reference lives in <a href="webview.html">WebView Callback Guide</a>. It includes the builder API, match modes, RemUI redirect behavior, and back-navigation semantics.</p>
+<pre><code>const webView = WebViewCb()
+  .url('https://checkout.example.com/start')
+  .fullscreen()
+  .match('checkout.example.com/success', 'contains')
+  .remuiContains('/ui/payment/confirm');
+
+const callback = ui.getCallback(req, res, '#cb1001');
+callback.addWebView(webView).send();</code></pre>
+        <div class="note">When the webview URL matches, Flutter closes the webview and opens the configured RemUI route with a <code>?from=...</code> query parameter. Back from that page returns to <code>/ui/main</code>.</div>
       </section>
 
       <section id="files">

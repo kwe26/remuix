@@ -9,6 +9,7 @@ export type JsonValue =
   | JsonObject
   | ConditionBuilder
   | EqlBuilder
+  | WebViewCbBuilder
   | SendBackBuilder
   | JsonValue[];
 export type JsonNode = { type: string;[key: string]: JsonValue };
@@ -102,6 +103,55 @@ export class EqlBuilder {
   }
 }
 
+export type WebViewMatchMode = 'contains' | 'exact' | 'startsWith';
+
+export type WebViewMatch = {
+  value: string;
+  mode: WebViewMatchMode;
+};
+
+export class WebViewCbBuilder {
+  type = 'webView' as const;
+  urlValue = '';
+  isFullscreen = false;
+  matches: WebViewMatch[] = [];
+  remuiPath = '';
+
+  url(value: string): WebViewCbBuilder {
+    this.urlValue = value;
+    return this;
+  }
+
+  fullscreen(value = true): WebViewCbBuilder {
+    this.isFullscreen = value;
+    return this;
+  }
+
+  match(value: string, mode: WebViewMatchMode = 'contains'): WebViewCbBuilder {
+    this.matches.push({ value, mode });
+    return this;
+  }
+
+  remuiContains(value: string): WebViewCbBuilder {
+    this.remuiPath = value;
+    return this;
+  }
+
+  build(): JsonNode {
+    return {
+      type: this.type,
+      url: this.urlValue,
+      fullscreen: this.isFullscreen,
+      matches: this.matches,
+      remuiContains: this.remuiPath,
+    };
+  }
+
+  toJSON(): JsonNode {
+    return this.build();
+  }
+}
+
 const MULTI_CHILD_TYPES = new Set(['Column', 'Row']);
 const runtimeVars = new Map<string, JsonValue>();
 const materialIconCodes: Map<string, string> = new Map();
@@ -154,6 +204,10 @@ class CallbackBuilder {
 
   setPrefs(entries: Record<string, JsonValue> | string): CallbackBuilder {
     return this.add({ setPrefs: entries });
+  }
+
+  addWebView(webView: WebViewCbBuilder): CallbackBuilder {
+    return this.add({ webView: webView.build() });
   }
 
   push(path: string): CallbackBuilder {
@@ -222,6 +276,10 @@ export class SendBackBuilder {
 
   setPrefs(entries: Record<string, JsonValue> | string): SendBackBuilder {
     return this.add({ setPrefs: entries });
+  }
+
+  addWebView(webView: WebViewCbBuilder): SendBackBuilder {
+    return this.add({ webView: webView.build() });
   }
 
   push(path: string): SendBackBuilder {
@@ -891,6 +949,10 @@ export function navReplace(
     mode,
     replace: true,
   };
+}
+
+export function WebViewCb(): WebViewCbBuilder {
+  return new WebViewCbBuilder();
 }
 
 export function paym(
