@@ -977,7 +977,6 @@ class _WebViewCallbackDialogState extends State<_WebViewCallbackDialog> {
       return Dialog.fullscreen(
         child: Scaffold(
           appBar: AppBar(
-            title: const Text('Web View'),
             leading: IconButton(
               icon: const Icon(Icons.close),
               onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
@@ -990,34 +989,16 @@ class _WebViewCallbackDialogState extends State<_WebViewCallbackDialog> {
 
     return Dialog(
       insetPadding: const EdgeInsets.all(16),
-      child: SizedBox(
-        width: 960,
-        height: 720,
-        child: Column(
-          children: [
-            Material(
-              color: Theme.of(context).colorScheme.surface,
-              child: Row(
-                children: [
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Web View',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () =>
-                        Navigator.of(context, rootNavigator: true).pop(),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
-            Expanded(child: body),
-          ],
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+          ),
+          automaticallyImplyLeading: false,
         ),
+        body: SizedBox(width: 960, height: 720, child: body),
       ),
     );
   }
